@@ -1,18 +1,29 @@
 package lu.uni.serval;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import lu.uni.serval.FlakimeInstrumenter;
 
 import java.io.File;
-import java.util.Collection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.*;
 
-@Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES)
+import static java.lang.Thread.currentThread;
+
+@Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
@@ -24,14 +35,62 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "0.05")
     float flakeRate;
 
+    @Parameter(defaultValue = "target/test-classes", property = "javassist.testBuildDir", required = false)
+    private String testBuildDir = "target/test-classes";
 
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    @Parameter(defaultValue = "target/classes", property = "javassist.buildDir", required = false)
+    private String buildDir;
+
+    public void execute_bak() throws MojoExecutionException, MojoFailureException {
         String root = project.getBuild().getDirectory();
         File rootDir = new File(new File(root),"test-classes");
         Collection<File> files = FileUtils.listFiles(rootDir, new String[]{"class"}, true);
         getLog().info("Flake rate: "+flakeRate);
         getLog().info("Strategy: "+strategy);
         getLog().info("Root: "+root);
-        files.forEach(file -> getLog().info(file.getAbsolutePath()));
+
     }
+
+    protected Iterator<String> iterateClassnames(final String directory) {
+        final File dir = new File(directory);
+        if (!dir.exists()) {
+            return Collections.emptyIterator();
+        }
+        final String[] extensions = {".class"};
+        final IOFileFilter fileFilter = new SuffixFileFilter(extensions);
+        final IOFileFilter dirFilter = TrueFileFilter.INSTANCE;
+        return ClassnameExtractor
+                .iterateClassnames(dir, FileUtils.iterateFiles(dir, fileFilter, dirFilter));
+    }
+
+    @Override
+    public void execute() throws MojoExecutionException {
+        try {
+            String testInputDirectory = computeDir(testBuildDir);
+
+            getLog().info("TestInputDirectory: "+testInputDirectory);
+            FlakimeInstrumenter flakimeInstrumenter = new FlakimeInstrumenter();
+            Iterator<String> classNameIterator = iterateClassnames(testInputDirectory);
+            getLog().info("ClassNameIterator: ");
+            while(classNameIterator.hasNext()){
+                String targetClass = classNameIterator.next();
+                getLog().info("TargetClass: "+targetClass);
+                flakimeInstrumenter.instrument(testInputDirectory,testInputDirectory,targetClass);
+            }
+        } catch (final Exception e) {
+            getLog().error(e.getMessage(), e);
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+
+    }
+
+    private String computeDir(String dir) {
+        File dirFile = new File(dir);
+        if (dirFile.isAbsolute()) {
+            return dirFile.getAbsolutePath();
+        } else {
+            return new File(project.getBasedir(), dir).getAbsolutePath();
+        }
+    }
+
 }
