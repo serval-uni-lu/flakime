@@ -26,7 +26,7 @@ import static java.lang.Thread.currentThread;
 @Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
 
-    @Parameter(defaultValue = "${project}", required = true, readonly = true)
+    @Parameter(property = "project", required = true, readonly = true)
     MavenProject project;
 
     @Parameter(defaultValue = "bernoulli")
@@ -35,21 +35,14 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "0.05")
     float flakeRate;
 
-    @Parameter(defaultValue = "target/test-classes", property = "javassist.testBuildDir", required = false)
-    private String testBuildDir = "target/test-classes";
+    @Parameter(required = true,property = "testAnnotations")
+    List<String> testAnnotations;
 
-    @Parameter(defaultValue = "target/classes", property = "javassist.buildDir", required = false)
+    @Parameter(defaultValue = "target/test-classes", property = "javassist.testBuildDir")
+    private final String testBuildDir = "target/test-classes";
+
+    @Parameter(defaultValue = "target/classes", property = "javassist.buildDir")
     private String buildDir;
-
-    public void execute_bak() throws MojoExecutionException, MojoFailureException {
-        String root = project.getBuild().getDirectory();
-        File rootDir = new File(new File(root),"test-classes");
-        Collection<File> files = FileUtils.listFiles(rootDir, new String[]{"class"}, true);
-        getLog().info("Flake rate: "+flakeRate);
-        getLog().info("Strategy: "+strategy);
-        getLog().info("Root: "+root);
-
-    }
 
     protected Iterator<String> iterateClassnames(final String directory) {
         final File dir = new File(directory);
@@ -69,7 +62,7 @@ public class FlakimeMojo extends AbstractMojo {
             String testInputDirectory = computeDir(testBuildDir);
 
             getLog().info("TestInputDirectory: "+testInputDirectory);
-            FlakimeInstrumenter flakimeInstrumenter = new FlakimeInstrumenter();
+            FlakimeInstrumenter flakimeInstrumenter = new FlakimeInstrumenter(this.testAnnotations,flakeRate);
             Iterator<String> classNameIterator = iterateClassnames(testInputDirectory);
             getLog().info("ClassNameIterator: ");
             while(classNameIterator.hasNext()){
