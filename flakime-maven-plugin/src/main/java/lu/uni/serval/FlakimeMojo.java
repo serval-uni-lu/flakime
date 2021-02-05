@@ -1,6 +1,7 @@
 package lu.uni.serval;
 
 import lu.uni.serval.instrumentation.FlakimeInstrumenter;
+import lu.uni.serval.instrumentation.strategies.BernoulliStrategy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
@@ -54,7 +55,7 @@ public class FlakimeMojo extends AbstractMojo {
             String testInputDirectory = computeDir(testBuildDir);
 
             getLog().info("TestInputDirectory: "+testInputDirectory);
-            FlakimeInstrumenter flakimeInstrumenter = new FlakimeInstrumenter(this.testAnnotations,flakeRate);
+            FlakimeInstrumenter flakimeInstrumenter = new FlakimeInstrumenter(this.testAnnotations,flakeRate,new BernoulliStrategy());
             Iterator<String> classNameIterator = iterateClassnames(testInputDirectory);
             getLog().info("ClassNameIterator: ");
             while(classNameIterator.hasNext()){
