@@ -1,4 +1,4 @@
-package lu.uni.serval;
+package lu.uni.serval.instrumentation;
 
 import javassist.*;
 import javassist.bytecode.BadBytecode;
