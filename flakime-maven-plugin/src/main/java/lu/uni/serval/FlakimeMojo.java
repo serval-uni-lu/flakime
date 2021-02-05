@@ -4,24 +4,18 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import lu.uni.serval.FlakimeInstrumenter;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
-
-import static java.lang.Thread.currentThread;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 @Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
@@ -40,9 +34,6 @@ public class FlakimeMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "target/test-classes", property = "javassist.testBuildDir")
     private final String testBuildDir = "target/test-classes";
-
-    @Parameter(defaultValue = "target/classes", property = "javassist.buildDir")
-    private String buildDir;
 
     protected Iterator<String> iterateClassnames(final String directory) {
         final File dir = new File(directory);
