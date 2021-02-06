@@ -1,11 +1,13 @@
 package lu.uni.serval;
 
+import javassist.CannotCompileException;
+import javassist.NotFoundException;
+import lu.uni.serval.data.Project;
+import lu.uni.serval.data.TestClass;
+import lu.uni.serval.data.TestMethod;
 import lu.uni.serval.instrumentation.FlakimeInstrumenter;
-import lu.uni.serval.instrumentation.strategies.BernoulliStrategy;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.commons.io.filefilter.SuffixFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
+import lu.uni.serval.instrumentation.strategies.Strategy;
+import lu.uni.serval.instrumentation.strategies.StrategyFactory;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -15,68 +17,85 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 @Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
 
     @Parameter(property = "project", required = true, readonly = true)
-    MavenProject project;
+    MavenProject mavenProject;
 
     @Parameter(defaultValue = "bernoulli")
-    String strategy;
+    String strategy = "bernoulli";
 
     @Parameter(defaultValue = "0.05")
     float flakeRate;
 
     @Parameter(required = true,property = "testAnnotations")
-    List<String> testAnnotations;
+    Set<String> testAnnotations;
 
     @Parameter(defaultValue = "target/test-classes", property = "javassist.testBuildDir")
     private final String testBuildDir = "target/test-classes";
 
-    protected Iterator<String> iterateClassnames(final String directory) {
-        final File dir = new File(directory);
-        if (!dir.exists()) {
-            return Collections.emptyIterator();
-        }
-        final String[] extensions = {".class"};
-        final IOFileFilter fileFilter = new SuffixFileFilter(extensions);
-        final IOFileFilter dirFilter = TrueFileFilter.INSTANCE;
-        return ClassnameExtractor
-                .iterateClassnames(dir, FileUtils.iterateFiles(dir, fileFilter, dirFilter));
-    }
-
     @Override
     public void execute() throws MojoExecutionException {
         try {
-            String testInputDirectory = computeDir(testBuildDir);
+            final Strategy strategyImpl = StrategyFactory.fromName(strategy);
+            final Project project = initializeProject(mavenProject);
 
-            getLog().info("TestInputDirectory: "+testInputDirectory);
-            FlakimeInstrumenter flakimeInstrumenter = new FlakimeInstrumenter(this.testAnnotations,flakeRate,new BernoulliStrategy());
-            Iterator<String> classNameIterator = iterateClassnames(testInputDirectory);
-            getLog().info("ClassNameIterator: ");
-            while(classNameIterator.hasNext()){
-                String targetClass = classNameIterator.next();
-                getLog().info("TargetClass: "+targetClass);
-                flakimeInstrumenter.instrument(testInputDirectory,testInputDirectory,targetClass);
+            getLog().info(String.format("Found %d classes", project.getNumberClasses()));
+
+            for(TestClass testClass: project){
+
+                getLog().debug(String.format("Process class %s", testClass.getName()));
+
+                for (TestMethod testMethod: testClass){
+                    getLog().debug(String.format("\tProcess method %s", testMethod.getName()));
+
+                    try {
+                        FlakimeInstrumenter.instrument(testMethod, flakeRate, strategyImpl);
+                    } catch (CannotCompileException e) {
+                        getLog().warn(String.format(
+                                "Failed to instrument method %s: %s",
+                                testMethod.getName(), e.getMessage()), e);
+                    }
+                }
+
+                testClass.write();
             }
         } catch (final Exception e) {
             getLog().error(e.getMessage(), e);
             throw new MojoExecutionException(e.getMessage(), e);
         }
-
     }
 
-    private String computeDir(String dir) {
-        File dirFile = new File(dir);
-        if (dirFile.isAbsolute()) {
-            return dirFile.getAbsolutePath();
+    private Project initializeProject(MavenProject mavenProject) throws NotFoundException {
+        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        return new Project(testAnnotations, getDirectory(testBuildDir), mavenProject.getBasedir(), classLoader);
+    }
+
+    private File getDirectory(String path) {
+        final File directory = new File(path);
+
+        if (directory.isAbsolute()) {
+            return directory;
         } else {
-            return new File(project.getBasedir(), dir).getAbsolutePath();
+            return new File(mavenProject.getBasedir(), path);
         }
+    }
+
+    /**
+     * Evaluates and returns the output directory/
+     *
+     * If the passed {@code outputDir} is {@code null} or empty, the passed {@code inputDir} otherwise
+     * the {@code outputDir} will returned.
+     *
+     * @param outputDir The class output directory
+     * @param inputDir The class input directory
+     * @return The computed output directory
+     */
+    private static String evaluateOutputDirectory(final String outputDir, final String inputDir) {
+        return outputDir != null && !outputDir.trim().isEmpty() ? outputDir : inputDir.trim();
     }
 
 }
