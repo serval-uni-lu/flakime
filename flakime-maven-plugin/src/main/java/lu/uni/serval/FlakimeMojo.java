@@ -8,6 +8,7 @@ import lu.uni.serval.data.TestMethod;
 import lu.uni.serval.instrumentation.FlakimeInstrumenter;
 import lu.uni.serval.instrumentation.strategies.Strategy;
 import lu.uni.serval.instrumentation.strategies.StrategyFactory;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -17,25 +18,29 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 
 @Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
 
-    @Parameter(property = "project", required = true, readonly = true)
+    @Parameter(property = "project", readonly = true)
     MavenProject mavenProject;
 
-    @Parameter(defaultValue = "bernoulli")
-    String strategy = "bernoulli";
+    @Parameter(defaultValue = "bernoulli", property = "flakime.strategy")
+    String strategy;
 
-    @Parameter(defaultValue = "0.05")
+    @Parameter(defaultValue = "0.05", property = "flakime.flakeRate")
     float flakeRate;
 
-    @Parameter(required = true,property = "testAnnotations")
+    @Parameter(property = "flakime.testAnnotations", required = true)
     Set<String> testAnnotations;
 
-    @Parameter(defaultValue = "target/test-classes", property = "javassist.testBuildDir")
-    private final String testBuildDir = "target/test-classes";
+    @Parameter(defaultValue = "/target/test-classes", property = "flakime.testClassDirectory")
+    private String testClassDirectory;
+
+    @Parameter(defaultValue = "/src/test/java", property = "flakime.testSourceDirectory")
+    private String testSourceDirectory;
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -69,9 +74,13 @@ public class FlakimeMojo extends AbstractMojo {
         }
     }
 
-    private Project initializeProject(MavenProject mavenProject) throws NotFoundException {
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        return new Project(testAnnotations, getDirectory(testBuildDir), mavenProject.getBasedir(), classLoader);
+    private Project initializeProject(MavenProject mavenProject) throws NotFoundException, DependencyResolutionRequiredException {
+        return new Project(
+                testAnnotations,
+                getDirectory(testClassDirectory),
+                getDirectory(testSourceDirectory),
+                (List<String>)mavenProject.getTestClasspathElements()
+        );
     }
 
     private File getDirectory(String path) {
@@ -97,5 +106,4 @@ public class FlakimeMojo extends AbstractMojo {
     private static String evaluateOutputDirectory(final String outputDir, final String inputDir) {
         return outputDir != null && !outputDir.trim().isEmpty() ? outputDir : inputDir.trim();
     }
-
 }
