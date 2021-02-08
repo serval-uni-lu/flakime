@@ -1,5 +1,8 @@
 package lu.uni.serval.instrumentation.strategies;
 
+import lu.uni.serval.instrumentation.strategies.bernoulli.BernoulliStrategy;
+import lu.uni.serval.instrumentation.strategies.vocabulary.VocabularyStrategy;
+
 public class StrategyFactory {
     public static Strategy fromName(String name) throws ClassNotFoundException {
         if(name.trim().equalsIgnoreCase("bernoulli")){

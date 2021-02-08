@@ -24,10 +24,12 @@ public class FlakimeInstrumenter {
     }
 
     private static String computePayload(TestMethod testMethod, Strategy strategy, float flakeRate, int lineNumber){
+
+
         return "if(" +
-                randomVariableName +
-                " < " +
-                strategy.computeProbability(testMethod, lineNumber) * flakeRate +
+                flakeRate +
+                " > " +
+                strategy.getProbabilityFunction(testMethod, lineNumber) +
                 "){throw new Exception(\"Test is flaky (flake rate: " +
                 flakeRate +
                 ") :\"+" +

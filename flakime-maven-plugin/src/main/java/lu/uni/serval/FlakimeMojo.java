@@ -44,11 +44,16 @@ public class FlakimeMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
+        Strategy strategyImpl = null;
+
         try {
-            final Strategy strategyImpl = StrategyFactory.fromName(strategy);
             final Project project = initializeProject(mavenProject);
 
+            strategyImpl = StrategyFactory.fromName(strategy);
+
             getLog().info(String.format("Found %d classes", project.getNumberClasses()));
+
+            strategyImpl.preProcess();
 
             for(TestClass testClass: project){
 
@@ -71,6 +76,10 @@ public class FlakimeMojo extends AbstractMojo {
         } catch (final Exception e) {
             getLog().error(e.getMessage(), e);
             throw new MojoExecutionException(e.getMessage(), e);
+        } finally {
+            if(strategyImpl != null){
+                strategyImpl.postProcess();
+            }
         }
     }
 
