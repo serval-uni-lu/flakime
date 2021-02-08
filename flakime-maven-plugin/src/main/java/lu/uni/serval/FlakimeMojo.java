@@ -11,6 +11,7 @@ import lu.uni.serval.instrumentation.strategies.StrategyFactory;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -48,18 +49,20 @@ public class FlakimeMojo extends AbstractMojo {
 
         try {
             final Project project = initializeProject(mavenProject);
-
             strategyImpl = StrategyFactory.fromName(strategy);
 
+            getLog().info(String.format("Strategy %s loaded",strategyImpl.getClass().getName()));
             getLog().info(String.format("Found %d classes", project.getNumberClasses()));
 
-            strategyImpl.preProcess();
+            getLog().debug("Running preProcess of "+strategyImpl.getClass().getSimpleName());
+            strategyImpl.preProcess(project);
 
             for(TestClass testClass: project){
 
                 getLog().debug(String.format("Process class %s", testClass.getName()));
 
                 for (TestMethod testMethod: testClass){
+                    testMethod.getSourceCodeFile();
                     getLog().debug(String.format("\tProcess method %s", testMethod.getName()));
 
                     try {

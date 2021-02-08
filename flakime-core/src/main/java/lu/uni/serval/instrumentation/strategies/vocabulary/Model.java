@@ -1,8 +1,81 @@
 package lu.uni.serval.instrumentation.strategies.vocabulary;
 
+import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.KerasTokenizer;
+import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;
+import org.javatuples.Pair;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import weka.classifiers.Evaluation;
+import weka.classifiers.trees.RandomForest;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 public class Model {
+
+    private TrainingData trainingData;
+    private Set<String> additionalTrainingText;
+    private String result;
+
+    public String getResult() {
+        return result;
+    }
+
+    public Model(TrainingData trainingData, Set<String> additionalTrainingText) throws Exception {
+        this.trainingData = trainingData;
+        this.additionalTrainingText = additionalTrainingText;
+
+        List<String> x_train = this.trainingData.getEntries().stream().map(entry -> entry.body).collect(Collectors.toList());
+        List<Integer> y_train = this.trainingData.getEntries().stream().map(entry -> entry.label).collect(Collectors.toList());
+        KerasTokenizer tokenizer = new KerasTokenizer();
+
+        String[] dataTrain = x_train.toArray(new String[0]);
+        String[] additionalTrain = additionalTrainingText.toArray(new String[0]);
+        tokenizer.fitOnTexts(dataTrain); // should be fitted on ALL data
+        INDArray matrix = tokenizer.textsToMatrix(dataTrain, TokenizerMode.COUNT); // should be counted on trainData only
+        Map<Integer,String> stringIndexes = tokenizer.getIndexWord();
+        ArrayList<Attribute> attributeList = new ArrayList<>();
+
+        stringIndexes.forEach((index,string)->{
+            attributeList.add(new Attribute(string));
+        });
+
+        long sizeOfFeatureVector = matrix.shape()[1];
+        long numberOfInstances = matrix.shape()[0];
+        Instances trainInstances = new Instances("trainData",attributeList, (int) numberOfInstances);
+        Attribute labelAttribute = new Attribute("label");
+        trainInstances.setClass(labelAttribute);
+        for(int i=0;i<x_train.size();i++){
+
+            System.out.println("Index: "+i);
+            Instance ins = new DenseInstance((int) sizeOfFeatureVector);
+            ins.setDataset(trainInstances);
+            double[] matrixRow = matrix.getRow(i).toDoubleVector();
+            ins.copy(matrixRow);
+            ins.setValue(labelAttribute,y_train.get(i));
+        }
+
+        int nbtrees = 100;
+        int random_state = 0;
+
+        RandomForest forest=new RandomForest();
+        forest.setNumIterations(nbtrees);
+        forest.setSeed(random_state);
+        System.out.println("RFC Training started");
+        forest.buildClassifier(trainInstances);
+
+        Evaluation eval = new Evaluation(trainInstances);
+        eval.evaluateModel(forest, trainInstances);
+        this.result = eval.toSummaryString();
+    }
+
+
     /**
-     * TODO: Generate the model that will do the same was what guillaume did in python
+     * TODO: Generate the model that will do the same what guillaume did in python
      * Note: The data class is already started and should load the json that Guillaume used for his model
      * This class should do the same but in Weka (dependency already present in the pom)
      *

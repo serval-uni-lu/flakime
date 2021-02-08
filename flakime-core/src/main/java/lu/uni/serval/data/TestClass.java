@@ -43,7 +43,7 @@ public class TestClass implements Iterable<TestMethod> {
      * Check whether a CtMethod is a test by analysing its annotation.
      *
      * @param m method that is evaluated
-     * @return True if the method is indeed a test
+     * @return True if the method annotation is in {@code testAnnotations}
      */
     private boolean isTest(CtMethod m) {
         String runtimeAnnotation = "RuntimeVisibleAnnotations";

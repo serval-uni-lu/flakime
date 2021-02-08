@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TrainingData {
@@ -18,6 +19,10 @@ public class TrainingData {
     private List<Entry> load(InputStream in) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(in, new TypeReference<List<Entry>>(){});
+    }
+
+    public List<Entry> getEntries() {
+        return entries;
     }
 
     static class Entry{
