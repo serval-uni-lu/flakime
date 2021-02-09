@@ -4,14 +4,16 @@ import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.KerasTokenizer
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;
 import org.javatuples.Pair;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instance;
-import weka.core.Instances;
+import weka.core.*;
+import weka.core.converters.ArffSaver;
 import weka.core.converters.ConverterUtils;
 
+import java.io.File;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,58 +23,101 @@ public class Model {
     private Set<String> additionalTrainingText;
     private String result;
 
+
     public String getResult() {
         return result;
+
     }
 
     public Model(TrainingData trainingData, Set<String> additionalTrainingText) throws Exception {
         this.trainingData = trainingData;
         this.additionalTrainingText = additionalTrainingText;
 
-        List<String> x_train = this.trainingData.getEntries().stream().map(entry -> entry.body).collect(Collectors.toList());
         List<Integer> y_train = this.trainingData.getEntries().stream().map(entry -> entry.label).collect(Collectors.toList());
         KerasTokenizer tokenizer = new KerasTokenizer();
 
-        String[] dataTrain = x_train.toArray(new String[0]);
+        String[] dataTrain = this.trainingData.getEntries().stream().map(entry -> entry.body).toArray(String[]::new);
         String[] additionalTrain = additionalTrainingText.toArray(new String[0]);
+
+        System.out.printf("[%d] Fit on texts%n",System.currentTimeMillis());
         tokenizer.fitOnTexts(dataTrain); // should be fitted on ALL data
-        INDArray matrix = tokenizer.textsToMatrix(dataTrain, TokenizerMode.COUNT); // should be counted on trainData only
+
+        System.out.printf("[%d] Text to Matrix%n",System.currentTimeMillis());
+
+//        INDArray matrix = tokenizer.textsToMatrix(dataTrain, TokenizerMode.COUNT); // should be counted on trainData only
         Map<Integer,String> stringIndexes = tokenizer.getIndexWord();
-        ArrayList<Attribute> attributeList = new ArrayList<>();
+//        ArrayList<Attribute> attributeListFeatures = new ArrayList<>();
+//        ArrayList<Attribute> attributeListAll = new ArrayList<>();
 
-        stringIndexes.forEach((index,string)->{
-            attributeList.add(new Attribute(string));
-        });
 
-        long sizeOfFeatureVector = matrix.shape()[1];
-        long numberOfInstances = matrix.shape()[0];
-        Instances trainInstances = new Instances("trainData",attributeList, (int) numberOfInstances);
-        Attribute labelAttribute = new Attribute("label");
+        Attribute labelAttribute = new Attribute("label_clazz");
+//        stringIndexes.forEach((index,string)->{
+//            Attribute a = new Attribute(string);
+//            attributeListFeatures.add(a);
+//            attributeListAll.add(a);
+//        });
+//        attributeListAll.add(labelAttribute);
+        ArrayList<Attribute> featuresList = (ArrayList<Attribute>) stringIndexes.values().stream().map(Attribute::new).collect(Collectors.toList());
+        featuresList.add(labelAttribute);
+        Instances trainInstances = new Instances("trainData", featuresList , y_train.size());
+
         trainInstances.setClass(labelAttribute);
-        for(int i=0;i<x_train.size();i++){
-
-            System.out.println("Index: "+i);
-            Instance ins = new DenseInstance((int) sizeOfFeatureVector);
-            ins.setDataset(trainInstances);
-            double[] matrixRow = matrix.getRow(i).toDoubleVector();
-            ins.copy(matrixRow);
-            ins.setValue(labelAttribute,y_train.get(i));
+        System.out.printf("[%d] Creating instances%n",System.currentTimeMillis());
+        Instance newInstance;
+        double[] featureVector;
+        for(int i=0;i<y_train.size();i++){
+            String[] str = new String[1];
+            str[0] = dataTrain[i];
+            featureVector = tokenizer.textsToMatrix(str,TokenizerMode.COUNT).toDoubleVector();
+            featureVector = Arrays.copyOf(featureVector,featureVector.length+1);
+            featureVector[featureVector.length-1] = y_train.get(i);
+            newInstance = new SparseInstance(1.0,featureVector);
+            newInstance.setDataset(trainInstances);
+            trainInstances.add(newInstance);
+//            System.out.println("["+i+"]");
         }
 
-        int nbtrees = 100;
+//        System.out.printf("[%d] Saving dataset%n",System.currentTimeMillis());
+//        ArffSaver saver = new ArffSaver();
+//        saver.setInstances(trainInstances);
+//        saver.setFile(new File("test.arff"));
+//        saver.writeBatch();
+
+        int nbtrees = 50;
         int random_state = 0;
 
         RandomForest forest=new RandomForest();
         forest.setNumIterations(nbtrees);
         forest.setSeed(random_state);
-        System.out.println("RFC Training started");
+        System.out.printf("[%d] Building classifier%n",System.currentTimeMillis());
+        forest.setDebug(true);
         forest.buildClassifier(trainInstances);
+
+
+        System.out.printf("[%d] Evaluate classifier%n",System.currentTimeMillis());
+        ArrayList<Integer> res = new ArrayList<>();
+        for(Instance ins : trainInstances){
+            double classValue = ins.classValue();
+            double prediction = forest.classifyInstance(ins);
+            res.add(prediction == classValue ? 1 : 0);
+        }
+
+        int total = res.stream().reduce(Integer::sum).get();
+        System.out.println("Accuracy: "+total/res.size());
 
         Evaluation eval = new Evaluation(trainInstances);
         eval.evaluateModel(forest, trainInstances);
         this.result = eval.toSummaryString();
+        System.out.println(this.result);
     }
 
+    public static <K, V> K getKey(Map<K, V> map, V value) {
+        return map.entrySet()
+                .stream()
+                .filter(entry -> value.equals(entry.getValue()))
+                .map(Map.Entry::getKey)
+                .findFirst().get();
+    }
 
     /**
      * TODO: Generate the model that will do the same what guillaume did in python

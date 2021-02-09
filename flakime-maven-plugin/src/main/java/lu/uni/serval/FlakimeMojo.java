@@ -86,7 +86,7 @@ public class FlakimeMojo extends AbstractMojo {
         }
     }
 
-    private Project initializeProject(MavenProject mavenProject) throws NotFoundException, DependencyResolutionRequiredException {
+    public Project initializeProject(MavenProject mavenProject) throws NotFoundException, DependencyResolutionRequiredException {
         return new Project(
                 testAnnotations,
                 getDirectory(testClassDirectory),

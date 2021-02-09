@@ -74,7 +74,7 @@ public class Project implements Iterable<TestClass> {
         return classPool;
     }
 
-    private Set<String> getClassNames() {
+    public Set<String> getClassNames() {
         if(classNames == null) {
             final String[] extensions = {"class"};
 
