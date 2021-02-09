@@ -83,7 +83,7 @@ public class Model {
 //        saver.setFile(new File("test.arff"));
 //        saver.writeBatch();
 
-        int nbtrees = 50;
+        int nbtrees = 5;
         int random_state = 0;
 
         RandomForest forest=new RandomForest();
@@ -93,17 +93,17 @@ public class Model {
         forest.setDebug(true);
         forest.buildClassifier(trainInstances);
 
-
         System.out.printf("[%d] Evaluate classifier%n",System.currentTimeMillis());
         ArrayList<Integer> res = new ArrayList<>();
+        int score = 0;
         for(Instance ins : trainInstances){
             double classValue = ins.classValue();
-            double prediction = forest.classifyInstance(ins);
-            res.add(prediction == classValue ? 1 : 0);
+            double prediction = forest.classifyInstance(ins) >= 0.5 ? 1.0 : 0.0;
+            System.out.println(classValue +" : "+prediction);
+            score = score + (prediction == classValue ? 1 : 0);
         }
 
-        int total = res.stream().reduce(Integer::sum).get();
-        System.out.println("Accuracy: "+total/res.size());
+        System.out.println("Accuracy: "+score+" "+trainInstances.size()+" "+(float)(score/trainInstances.size()));
 
         Evaluation eval = new Evaluation(trainInstances);
         eval.evaluateModel(forest, trainInstances);
