@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class Model {
 
     private String result;
-    private RandomForest randomForest;
+    private final RandomForest randomForest;
     private boolean trainNeededFlag = true;
 
     public String getResult() {
@@ -25,24 +25,26 @@ public class Model {
     public Model() throws Exception {
         int nbtrees = 5;
         int random_state = 0;
+        int numberOfThreads = 5;
 
         RandomForest forest = new RandomForest();
         forest.setNumIterations(nbtrees);
         forest.setSeed(random_state);
         forest.setDebug(true);
+        forest.setNumExecutionSlots(numberOfThreads);
 
         this.randomForest = forest;
 
     }
 
     public void trainModel(Instances trainingInstances) throws Exception {
-        long startTime = System.nanoTime();
+        float startTime = System.nanoTime();
         this.randomForest.buildClassifier(trainingInstances);
         this.trainNeededFlag = false;
-        long endTime = System.nanoTime();
+        float endTime = System.nanoTime();
 
-        System.out.printf("RFC took %d to train%n",(endTime-startTime)/1000000000);
-        System.out.println(this.randomForest.globalInfo());
+        System.out.printf("%nRFC took %.1f seconds to train%n",(endTime-startTime)/1000000000);
+
     }
 
     public double classify(Instance instance) throws Exception {
