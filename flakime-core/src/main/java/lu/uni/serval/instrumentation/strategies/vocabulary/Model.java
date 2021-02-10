@@ -8,6 +8,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 import weka.core.*;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,11 @@ public class Model {
     public String getResult() {
         return result;
 
+    }
+
+    public Model(String modelPath) throws Exception {
+        this.randomForest = (RandomForest) SerializationHelper.read(modelPath);
+        this.trainNeededFlag = false;
     }
 
     public Model() throws Exception {

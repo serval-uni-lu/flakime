@@ -8,10 +8,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.KerasTokenizer;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;
 import org.javatuples.Pair;
-import weka.core.Attribute;
-import weka.core.Instance;
-import weka.core.Instances;
-import weka.core.SparseInstance;
+import weka.core.*;
 
 
 import java.io.*;
@@ -28,7 +25,7 @@ public class VocabularyStrategy implements Strategy {
     @Override
     public void preProcess(Project p) throws Exception {
         preProcessBuildModel(p);
-
+        //TODO Selection between preProcessBuildModel() and preProcessLoadModel()
     }
 
     public void preProcessBuildModel(Project p) throws Exception {
@@ -61,7 +58,15 @@ public class VocabularyStrategy implements Strategy {
 //        this.model = new Model(originalTrainingData,additionalMethodsBody);
     }
 
-    public void preProcessLoadModel(Project p){
+    public void preProcessLoadModel(Project p) throws Exception {
+        //TODO Create/Load tokenizer
+
+        //TODO feature vector
+
+        //TODO Create the corresponding instances
+
+        //TODO Load model from file
+        this.model = new Model("path/to/model");
 
     }
 
