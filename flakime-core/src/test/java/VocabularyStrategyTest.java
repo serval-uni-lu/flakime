@@ -52,7 +52,7 @@ public class VocabularyStrategyTest {
     public void ModelInitTest() {
         Set<String> additionalTrainingData = new HashSet<String>(Collections.singletonList("assertEqual(1,1)"));
         try {
-            lu.uni.serval.instrumentation.strategies.vocabulary.Model rfcModel = new lu.uni.serval.instrumentation.strategies.vocabulary.Model(this.originalTrainingData,additionalTrainingData);
+            lu.uni.serval.instrumentation.strategies.vocabulary.Model rfcModel = new lu.uni.serval.instrumentation.strategies.vocabulary.Model();
         } catch (Exception e) {
             e.printStackTrace();
         }

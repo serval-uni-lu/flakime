@@ -24,17 +24,26 @@ public class FlakimeInstrumenter {
     }
 
     private static String computePayload(TestMethod testMethod, Strategy strategy, float flakeRate, int lineNumber){
+        //Rewrite so as the flakerate is taken in account only if the calculated flakiness proba is > 0
 
+        StringBuilder result = new StringBuilder();
+        String probability = strategy.getProbabilityFunction(testMethod, lineNumber);
 
-        return "if(" +
-                flakeRate +
-                " > " +
-                strategy.getProbabilityFunction(testMethod, lineNumber) +
-                "){throw new Exception(\"Test is flaky (flake rate: " +
-                flakeRate +
-                ") :\"+" +
-                randomVariableName +
-                "+\" \");}";
+        if(Double.parseDouble(probability) > 0){
+            result.append("if(")
+                    .append(flakeRate)
+                    .append(">")
+                    .append(probability)
+                    .append("){throw new Exception(")
+                    .append("\"[flakeRate:")
+                    .append(flakeRate)
+                    .append("] [flakinessProba:")
+                    .append(probability)
+                    .append("]\");}");
+
+        }else result.append("");
+
+        return result.toString();
     }
 
 }
