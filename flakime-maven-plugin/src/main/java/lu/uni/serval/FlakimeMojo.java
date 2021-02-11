@@ -20,6 +20,7 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 @Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
@@ -43,18 +44,22 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "/src/test/java", property = "flakime.testSourceDirectory")
     private String testSourceDirectory;
 
+    @Parameter(required = false)
+    private Properties strategyParameters;
+
     @Override
     public void execute() throws MojoExecutionException {
         Strategy strategyImpl = null;
 
         try {
             final Project project = initializeProject(mavenProject);
-            strategyImpl = StrategyFactory.fromName(strategy);
+            strategyImpl = StrategyFactory.fromName(strategy,strategyParameters);
 
             getLog().info(String.format("Strategy %s loaded",strategyImpl.getClass().getName()));
             getLog().info(String.format("Found %d classes", project.getNumberClasses()));
 
             getLog().debug("Running preProcess of "+strategyImpl.getClass().getSimpleName());
+
             strategyImpl.preProcess(project);
 
             for(TestClass testClass: project){
@@ -62,7 +67,6 @@ public class FlakimeMojo extends AbstractMojo {
                 getLog().debug(String.format("Process class %s", testClass.getName()));
 
                 for (TestMethod testMethod: testClass){
-                    testMethod.getSourceCodeFile();
                     getLog().debug(String.format("\tProcess method %s", testMethod.getName()));
 
                     try {

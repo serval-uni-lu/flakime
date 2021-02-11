@@ -32,7 +32,7 @@ public class TestMethod {
      *
      * @param ctMethod Instance of javassist {@code CtMethod.class}
      * @param sourceCode Instance of {@code File.class} pointing the method source files
-     * @throws BadBytecode
+     * @throws BadBytecode Thrown if the bytecode is malformed
      */
     public TestMethod(CtMethod ctMethod, File sourceCode) throws BadBytecode {
         this.ctMethod = ctMethod;
@@ -65,16 +65,16 @@ public class TestMethod {
 
     /**
      * Insert a source code payload at a certain index in the {@code CtMethod} instance
-     * @param lineNumber
-     * @param payload
-     * @throws CannotCompileException
+     * @param lineNumber The target line to insert the payload
+     * @param payload The source code to insert
+     * @throws CannotCompileException if the Compilation of source code fails
      */
     public void insertAt(int lineNumber, String payload) throws CannotCompileException {
         this.ctMethod.insertAt(lineNumber, payload);
     }
 
     /**
-     * @return
+     * @return The method simpleName
      */
     public String getName() {
         return this.ctMethod.getName();

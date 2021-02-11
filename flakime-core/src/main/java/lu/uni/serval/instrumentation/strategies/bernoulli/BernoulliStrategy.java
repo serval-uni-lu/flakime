@@ -1,12 +1,18 @@
 package lu.uni.serval.instrumentation.strategies.bernoulli;
 
+import javafx.util.Pair;
 import lu.uni.serval.data.Project;
 import lu.uni.serval.data.TestMethod;
 import lu.uni.serval.instrumentation.strategies.Strategy;
 
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+
 public class BernoulliStrategy implements Strategy {
     @Override
     public void preProcess(Project p) {
+
 
     }
 

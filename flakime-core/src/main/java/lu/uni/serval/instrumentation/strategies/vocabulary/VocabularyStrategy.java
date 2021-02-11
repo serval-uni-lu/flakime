@@ -1,35 +1,48 @@
 package lu.uni.serval.instrumentation.strategies.vocabulary;
 
+import java.io.*;
+import java.util.*;
+import java.util.stream.Collectors;
 import lu.uni.serval.data.Project;
 import lu.uni.serval.data.TestClass;
 import lu.uni.serval.data.TestMethod;
 import lu.uni.serval.instrumentation.strategies.Strategy;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.KerasTokenizer;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;
-import org.javatuples.Pair;
-import weka.core.*;
+import weka.core.Attribute;
+import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.SparseInstance;
 
-
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class VocabularyStrategy implements Strategy {
     private Model model;
     private KerasTokenizer tokenizer;
     private Instances trainingInstances;
+    private final String pathToModel;
+    private final boolean trainModel;
+
+    public VocabularyStrategy(String pathToModel, boolean trainModel) {
+        this.pathToModel = pathToModel;
+        this.trainModel = trainModel;
+    }
 
     /**
      * Vocabulary strategy preProcess entry point that will trigger either the building of the Random forest model or loading from file system.
      *
      * @param p The project to run the Strategy on
-     * @throws Exception
+     * @throws Exception Thrown if buildModel failed
      */
     @Override
-    public void preProcess(Project p) throws Exception {
-        preProcessBuildModel(p);
+    public void preProcess(final Project p) throws Exception {
+
+        if(trainModel)
+            preProcessBuildModel(p);
+        else
+            preProcessLoadModel(p, pathToModel);
+
         //TODO Selection between preProcessBuildModel() and preProcessLoadModel()
     }
 
@@ -39,18 +52,18 @@ public class VocabularyStrategy implements Strategy {
      * and finally train the model on the training instance.
      *
      * @param p The project to run the Strategy on
-     * @throws Exception
+     * @throws Exception If the training data or method source file could not be read
      */
-    public void preProcessBuildModel(Project p) throws Exception {
+    public void preProcessBuildModel(final Project p) throws Exception {
 //        System.out.println("Entered preProcess()");
         final InputStream dataSource = VocabularyStrategy.class.getClassLoader().getResourceAsStream("data/vocabulary.json");
         final TrainingData trainingData = new TrainingData(dataSource);
         Set<String> additionalTrainingText = new HashSet<>();
-        for(TestClass testClass: p){
-            for(TestMethod testMethod: testClass){
+        for (TestClass testClass: p) {
+            for (TestMethod testMethod: testClass) {
                 testMethod.getName();
                 File f = testMethod.getSourceCodeFile();
-                additionalTrainingText.addAll(this.getTestMethodBodyText(f,testMethod).values());
+                additionalTrainingText.addAll(this.getTestMethodBodyText(f, testMethod).values());
             }
         }
 
@@ -71,7 +84,7 @@ public class VocabularyStrategy implements Strategy {
 //        this.model = new Model(originalTrainingData,additionalMethodsBody);
     }
 
-    public void preProcessLoadModel(Project p) throws Exception {
+    public void preProcessLoadModel(Project p,String modelPath) throws Exception {
         //TODO Create/Load tokenizer
 
         //TODO feature vector
@@ -79,7 +92,7 @@ public class VocabularyStrategy implements Strategy {
         //TODO Create the corresponding instances
 
         //TODO Load model from file
-        this.model = new Model("path/to/model");
+        this.model = new Model(modelPath);
 
     }
 
@@ -88,7 +101,7 @@ public class VocabularyStrategy implements Strategy {
      *
      * @param test The test method which the codeblcok is.
      * @param lineNumber The line number at which a particular statement is executed
-     * @return
+     * @return Return the probability of the codeBlock to be flaky
      */
     @Override
     public String getProbabilityFunction(TestMethod test, int lineNumber) {
@@ -99,9 +112,8 @@ public class VocabularyStrategy implements Strategy {
             instance.setDataset(this.trainingInstances);
             probability = this.model.classify(instance);
 
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (Exception e) {
+
             e.printStackTrace();
         }
 
@@ -136,7 +148,7 @@ public class VocabularyStrategy implements Strategy {
      * @param f the source file
      * @param method the corresponding {@code TestMethod} instance
      * @return The mapping between the lineNumber and the corresponding sourceText
-     * @throws IOException
+     * @throws IOException thrown if the test file could not be read
      */
     public Map<Integer, String> getTestMethodBodyText(File f,TestMethod method) throws IOException {
         List<String> sb = new ArrayList<>();

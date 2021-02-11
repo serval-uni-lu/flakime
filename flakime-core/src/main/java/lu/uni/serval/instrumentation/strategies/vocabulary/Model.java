@@ -1,19 +1,16 @@
 package lu.uni.serval.instrumentation.strategies.vocabulary;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.KerasTokenizer;
-import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;
-import org.javatuples.Pair;
-import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
-import weka.core.*;
-
-import java.io.File;
-import java.util.*;
-import java.util.stream.Collectors;
+import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.SerializationHelper;
 
 
 public class Model {
+
+    public RandomForest getRandomForest() {
+        return randomForest;
+    }
 
     private final RandomForest randomForest;
     private boolean trainNeededFlag = true;
@@ -23,7 +20,7 @@ public class Model {
      * Parameterized Constructor to create the model based on a pre-trained RandomForest
      *
      * @param modelPath The path to the pre-trained RandomForest
-     * @throws Exception
+     * @throws Exception Thrown if De-serialization fails
      */
     public Model(String modelPath) throws Exception {
         this.randomForest = (RandomForest) SerializationHelper.read(modelPath);
@@ -34,9 +31,8 @@ public class Model {
     /**
      * Non parameterized constructor that builds a RandomForest from scratch
      *
-     * @throws Exception
      */
-    public Model() throws Exception {
+    public Model(){
         int nbtrees = 5;
         int random_state = 0;
         int numberOfThreads = 5;
@@ -56,7 +52,7 @@ public class Model {
      * Method that will fit the classifier to the given Instances.
      *
      * @param trainingInstances Instances representing the training set.
-     * @throws Exception
+     * @throws Exception Thrown by classifier build
      */
     public void trainModel(Instances trainingInstances) throws Exception {
         float startTime = System.nanoTime();
@@ -73,7 +69,7 @@ public class Model {
      *
      * @param instance The instance to be labeled
      * @return A probability between 0.0 and 1.0
-     * @throws Exception
+     * @throws Exception Throw if model needs to be trained
      */
     public double classify(Instance instance) throws Exception {
         if(this.trainNeededFlag){
