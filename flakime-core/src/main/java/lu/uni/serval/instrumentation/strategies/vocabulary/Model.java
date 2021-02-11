@@ -12,22 +12,30 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 public class Model {
 
-    private String result;
     private final RandomForest randomForest;
     private boolean trainNeededFlag = true;
 
-    public String getResult() {
-        return result;
 
-    }
-
+    /**
+     * Parameterized Constructor to create the model based on a pre-trained RandomForest
+     *
+     * @param modelPath The path to the pre-trained RandomForest
+     * @throws Exception
+     */
     public Model(String modelPath) throws Exception {
         this.randomForest = (RandomForest) SerializationHelper.read(modelPath);
         this.trainNeededFlag = false;
     }
 
+
+    /**
+     * Non parameterized constructor that builds a RandomForest from scratch
+     *
+     * @throws Exception
+     */
     public Model() throws Exception {
         int nbtrees = 5;
         int random_state = 0;
@@ -43,6 +51,13 @@ public class Model {
 
     }
 
+
+    /**
+     * Method that will fit the classifier to the given Instances.
+     *
+     * @param trainingInstances Instances representing the training set.
+     * @throws Exception
+     */
     public void trainModel(Instances trainingInstances) throws Exception {
         float startTime = System.nanoTime();
         this.randomForest.buildClassifier(trainingInstances);
@@ -53,6 +68,13 @@ public class Model {
 
     }
 
+    /**
+     * Method to return the probability of flakiness of the given instance
+     *
+     * @param instance The instance to be labeled
+     * @return A probability between 0.0 and 1.0
+     * @throws Exception
+     */
     public double classify(Instance instance) throws Exception {
         if(this.trainNeededFlag){
             throw new IllegalStateException("The model is not fitted");

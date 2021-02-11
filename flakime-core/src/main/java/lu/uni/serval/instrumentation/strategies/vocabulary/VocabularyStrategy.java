@@ -21,13 +21,26 @@ public class VocabularyStrategy implements Strategy {
     private KerasTokenizer tokenizer;
     private Instances trainingInstances;
 
-
+    /**
+     * Vocabulary strategy preProcess entry point that will trigger either the building of the Random forest model or loading from file system.
+     *
+     * @param p The project to run the Strategy on
+     * @throws Exception
+     */
     @Override
     public void preProcess(Project p) throws Exception {
         preProcessBuildModel(p);
         //TODO Selection between preProcessBuildModel() and preProcessLoadModel()
     }
 
+    /**
+     * Pre-process method to build a model on the given project.
+     * This method extract the vocabulary from each test methods, create a {@code KerasTokenizer} on the training data and computed additional data to extract the feature vectors
+     * and finally train the model on the training instance.
+     *
+     * @param p The project to run the Strategy on
+     * @throws Exception
+     */
     public void preProcessBuildModel(Project p) throws Exception {
 //        System.out.println("Entered preProcess()");
         final InputStream dataSource = VocabularyStrategy.class.getClassLoader().getResourceAsStream("data/vocabulary.json");
@@ -70,6 +83,13 @@ public class VocabularyStrategy implements Strategy {
 
     }
 
+    /**
+     * Method to return the a particular block of test body probability to be flaky based on the previously trained model.
+     *
+     * @param test The test method which the codeblcok is.
+     * @param lineNumber The line number at which a particular statement is executed
+     * @return
+     */
     @Override
     public String getProbabilityFunction(TestMethod test, int lineNumber) {
         double probability =0.0;
@@ -93,6 +113,13 @@ public class VocabularyStrategy implements Strategy {
 
     }
 
+
+    /**
+     * Method to get the string corresponding to the codeblock from the beginning of the method until a specific line number.
+     * @param methodBodyText The whole method body with the corresponding line number. Each entry corresponds to a a line number and its corresponding text.
+     * @param lineNumber The lineNumber until which the string should be recorded.
+     * @return The resulting codeblock
+     */
     public String getTextBodyToLine(Map<Integer,String> methodBodyText, int lineNumber){
         StringBuilder sb = new StringBuilder();
         for(Integer ln:methodBodyText.keySet()){
@@ -130,6 +157,15 @@ public class VocabularyStrategy implements Strategy {
         return resultBody;
     }
 
+    /**
+     * Method to create a not empty weka Instances object
+     *
+     * @param tokenizer The fitted kerasTokenizer from which the feature vector are extracted
+     * @param numTrainInstances The size of the training set
+     * @param featureTrain The body of each test method
+     * @param labelTrain The label of each training sample
+     * @return The Training instances
+     */
     private Instances createInstances(KerasTokenizer tokenizer,int numTrainInstances,String[] featureTrain,List<Integer> labelTrain){
         Instances trainInstances = createEmptyInstances(tokenizer,numTrainInstances);
 
@@ -142,6 +178,13 @@ public class VocabularyStrategy implements Strategy {
         return trainInstances;
     }
 
+    /**
+     * Method to create a weka Instance.
+     * @param methodBody The test method body
+     * @param label The test label value
+     * @param tokenizer The kerasTokenizer from which the feature vector is extracted
+     * @return The weka instance
+     */
     private Instance createSingleInstance(String methodBody, double label, KerasTokenizer tokenizer){
         String[] str = new String[1];
         str[0] = methodBody;
@@ -152,6 +195,13 @@ public class VocabularyStrategy implements Strategy {
         return sparseInstance;
     }
 
+
+    /**
+     * Method to initialize the weka Instances. This method creates the attributes corresponding to each token extracted from the tokenizer and attach the attributes to the empty weka Instances
+     * @param tokenizer Tokenizer fitted on training data
+     * @param numTrainInstances Number on training samples
+     * @return Empty initialized instances object
+     */
     private Instances createEmptyInstances(KerasTokenizer tokenizer, int numTrainInstances){
         Map<Integer,String> stringIndexes = tokenizer.getIndexWord();
 
@@ -165,6 +215,13 @@ public class VocabularyStrategy implements Strategy {
         return trainInstances;
     }
 
+
+    /**
+     * Method to create and fit a KerasTokenizer
+     * @param trainingVocabulary The training testmethod bodies
+     * @param additonalVocabulary The additional testmehtod bodies
+     * @return The fitted kerasTokenizer
+     */
     private KerasTokenizer createTokenizer(String[] trainingVocabulary,String[] additonalVocabulary){
         String[] concat = ArrayUtils.addAll(trainingVocabulary,additonalVocabulary);
         KerasTokenizer tokenizer = new KerasTokenizer();
