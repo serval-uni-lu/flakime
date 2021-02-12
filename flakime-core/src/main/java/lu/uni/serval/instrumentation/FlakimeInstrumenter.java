@@ -19,6 +19,7 @@ public class FlakimeInstrumenter {
 
         for(int lineNumber: testMethod.getStatementLineNumbers()){
             final String payload = computePayload(testMethod, strategy, flakeRate, lineNumber);
+            System.out.println("Inserting ***"+payload+"***");
             testMethod.insertAt(lineNumber + 1, payload);
         }
     }
@@ -31,13 +32,13 @@ public class FlakimeInstrumenter {
 
         if(Double.parseDouble(probability) > 0){
             result.append("if(")
-                    .append(flakeRate)
-                    .append(">")
+//                    .append("+")
+                    .append(randomVariableName)
+//                    .append("+")
+                    .append("<")
                     .append(probability)
-                    .append("){throw new Exception(")
-                    .append("\"[flakeRate:")
-                    .append(flakeRate)
-                    .append("] [flakinessProba:")
+                    .append( "){throw new Exception(\"" )
+                    .append("[flakinessProba:")
                     .append(probability)
                     .append("]\");}");
 

@@ -22,6 +22,16 @@ public class BernoulliStrategy implements Strategy {
     }
 
     @Override
+    public double getTestFlakinessProbability(TestMethod test) {
+        return 0;
+    }
+
+    @Override
+    public double getStatementFlakinessProbability(TestMethod tes, int lineNumber) {
+        return 0;
+    }
+
+    @Override
     public void postProcess() {
 
     }

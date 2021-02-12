@@ -16,7 +16,11 @@ public class StrategyFactory {
 
         if (name.trim().equalsIgnoreCase("vocabulary")){
             boolean trainModel = Boolean.parseBoolean(Optional.of(properties.getProperty("trainModel")).orElse("true"));
-            String pathModel = Optional.ofNullable(properties.getProperty("modelPath")).orElseThrow(() -> new FileNotFoundException("Path to the pre-trained model must be provided"));
+            String pathModel = "";
+            if(!trainModel){
+                pathModel = Optional.ofNullable(properties.getProperty("modelPath")).orElseThrow(() -> new FileNotFoundException("Path to the pre-trained model must be provided"));
+            }
+
             return new VocabularyStrategy(pathModel,trainModel);
         }
 

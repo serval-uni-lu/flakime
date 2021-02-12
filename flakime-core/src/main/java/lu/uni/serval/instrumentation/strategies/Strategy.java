@@ -10,5 +10,7 @@ import java.util.Properties;
 public interface Strategy {
     void preProcess(Project p) throws Exception;
     String getProbabilityFunction(TestMethod test, int lineNumber);
+    double getTestFlakinessProbability(TestMethod test);
+    double getStatementFlakinessProbability(TestMethod tes,int lineNumber);
     void postProcess();
 }

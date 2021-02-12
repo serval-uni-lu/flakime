@@ -78,12 +78,6 @@
             <groupId>nz.ac.waikato.cms.weka</groupId>
             <artifactId>weka-stable</artifactId>
             <version>3.8.5</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mtj</artifactId>
-                    <groupId>com.googlecode.matrix-toolkits-java</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.javatuples</groupId>
@@ -95,36 +89,6 @@
             <groupId>org.deeplearning4j</groupId>
             <artifactId>deeplearning4j-core</artifactId>
             <version>1.0.0-beta7</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>deeplearning4j-nn</artifactId>
-                    <groupId>org.deeplearning4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>datavec-api</artifactId>
-                    <groupId>org.datavec</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>deeplearning4j-ui-components</artifactId>
-                    <groupId>org.deeplearning4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-io</artifactId>
-                    <groupId>commons-io</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>javacv</artifactId>
-                    <groupId>org.bytedeco</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>openblas</artifactId>
-                    <groupId>org.bytedeco</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.nd4j</groupId>
@@ -149,36 +113,6 @@
             <artifactId>maven-core</artifactId>
             <version>3.6.3</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>maven-shared-utils</artifactId>
-                    <groupId>org.apache.maven.shared</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>maven-artifact</artifactId>
-                    <groupId>org.apache.maven</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-lang3</artifactId>
-                    <groupId>org.apache.commons</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>plexus-classworlds</artifactId>
-                    <groupId>org.codehaus.plexus</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>plexus-component-annotations</artifactId>
-                    <groupId>org.codehaus.plexus</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>plexus-utils</artifactId>
-                    <groupId>org.codehaus.plexus</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->
         <dependency>

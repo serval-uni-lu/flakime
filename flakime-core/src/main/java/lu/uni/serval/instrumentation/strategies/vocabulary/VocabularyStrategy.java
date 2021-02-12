@@ -23,6 +23,7 @@ public class VocabularyStrategy implements Strategy {
     private Instances trainingInstances;
     private final String pathToModel;
     private final boolean trainModel;
+    private Map<Integer,Double> probabilitiesPerStatement;
 
     public VocabularyStrategy(String pathToModel, boolean trainModel) {
         this.pathToModel = pathToModel;
@@ -105,19 +106,73 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public String getProbabilityFunction(TestMethod test, int lineNumber) {
-        double probability =0.0;
+        return String.valueOf(this.getStatementFlakinessProbability(test,lineNumber));
+    }
+
+    @Override
+    public double getTestFlakinessProbability(TestMethod test) {
+        double testFlakinessProbability =0.0;
         try {
             Map<Integer,String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(),test);
-            Instance instance = this.createSingleInstance(getTextBodyToLine(methodBodyText,lineNumber),0,this.tokenizer);
-            instance.setDataset(this.trainingInstances);
-            probability = this.model.classify(instance);
-
+            String completeBody = methodBodyText.values().stream().reduce((a,b) -> a+" "+b).orElseThrow(() -> new IllegalStateException(String.format("Method body of %s is empty",test.getName())));
+            Instance bodyInstance = this.createSingleInstance(completeBody,0,this.tokenizer);
+            bodyInstance.setDataset(this.trainingInstances);
+            testFlakinessProbability = this.model.classify(bodyInstance);
+            computeStatementProbability(test);
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
-        return String.valueOf(probability);
+
+
+
+        return testFlakinessProbability;
+    }
+
+    /**
+     * Method that compute the probability of each code blocks of the test method
+     *
+     * @param test The test method to extract the code blocks and compute flakiness probability
+     * @throws IOException,Exception if the TestMethod source file could not be read or if an error occurs during prediction
+     */
+    private void computeStatementProbability(TestMethod test) throws Exception {
+        double totalProbabilities = 0.0;
+
+        this.probabilitiesPerStatement = new HashMap<>();
+        double statementProbability = 0.0;
+        Map<Integer,String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(),test);
+        System.out.printf("[%s]****%n",test.getName());
+        for (Integer statementNum: test.getStatementLineNumbers()) {
+            Instance instance = this.createSingleInstance(getTextBodyToLine(methodBodyText,statementNum),0,this.tokenizer);
+            instance.setDataset(this.trainingInstances);
+
+            statementProbability = this.model.classify(instance);
+            System.out.printf("[%s][statement:%d][p(statement): %f]%n",test.getName(),statementNum,statementProbability);
+            this.probabilitiesPerStatement.put(statementNum,statementProbability);
+            totalProbabilities += statementProbability;
+        }
+        double aggregateProbability = 0.0;
+
+        for (Integer statementNum: test.getStatementLineNumbers()) {
+            double unNormalizedP = this.probabilitiesPerStatement.get(statementNum);
+            double statementPnormalized = unNormalizedP/totalProbabilities;
+            //If considered that the more line of code, the more chances to flake
+            aggregateProbability += statementPnormalized;
+            this.probabilitiesPerStatement.put(statementNum,aggregateProbability);
+        }
+
+    }
+
+    /**
+     * Returns the aggregated flakiness probability corresponding to the codeblock from start to {@code lineNumber}
+     *
+     * @param test Not used
+     * @param lineNumber The ending line of the code block to get the probability
+     * @return The aggregated flakiness probability
+     */
+    @Override
+    public double getStatementFlakinessProbability(TestMethod test, int lineNumber) {
+        return Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0);
     }
 
     @Override

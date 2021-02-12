@@ -56,6 +56,7 @@ public class FlakimeMojo extends AbstractMojo {
             strategyImpl = StrategyFactory.fromName(strategy,strategyParameters);
 
             getLog().info(String.format("Strategy %s loaded",strategyImpl.getClass().getName()));
+            getLog().info(String.format("FlakeRate: %f",flakeRate));
             getLog().info(String.format("Found %d classes", project.getNumberClasses()));
 
             getLog().debug("Running preProcess of "+strategyImpl.getClass().getSimpleName());
@@ -70,7 +71,10 @@ public class FlakimeMojo extends AbstractMojo {
                     getLog().debug(String.format("\tProcess method %s", testMethod.getName()));
 
                     try {
-                        FlakimeInstrumenter.instrument(testMethod, flakeRate, strategyImpl);
+                        double probability = strategyImpl.getTestFlakinessProbability(testMethod);
+                        getLog().info(String.format("Probability of %s: %f",testMethod.getName(),probability));
+                        if(probability > (1-flakeRate))
+                            FlakimeInstrumenter.instrument(testMethod, flakeRate, strategyImpl);
                     } catch (CannotCompileException e) {
                         getLog().warn(String.format(
                                 "Failed to instrument method %s: %s",
