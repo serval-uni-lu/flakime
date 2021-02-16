@@ -42,7 +42,7 @@ public class FlakimeInstrumenter {
                     .append(probability)
                     .append("]\");}");
 
-        }else result.append("");
+        }
 
         return result.toString();
     }

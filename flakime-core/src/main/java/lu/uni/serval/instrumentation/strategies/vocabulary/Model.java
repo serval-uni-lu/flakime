@@ -8,9 +8,7 @@ import weka.core.SerializationHelper;
 
 public class Model {
 
-    public RandomForest getRandomForest() {
-        return randomForest;
-    }
+
 
     private final RandomForest randomForest;
     private boolean trainNeededFlag = true;
@@ -26,7 +24,18 @@ public class Model {
         this.randomForest = (RandomForest) SerializationHelper.read(modelPath);
         this.trainNeededFlag = false;
     }
+    public Model(int nTrees, int nThreads) {
+        RandomForest forest = new RandomForest();
+        forest.setNumIterations(nTrees);
+        forest.setSeed(0);
+        forest.setDebug(true);
+        forest.setNumExecutionSlots(nThreads);
+        this.randomForest = forest;
+    }
 
+    public RandomForest getRandomForest() {
+        return randomForest;
+    }
 
     /**
      * Non parameterized constructor that builds a RandomForest from scratch
@@ -55,6 +64,7 @@ public class Model {
      * @throws Exception Thrown by classifier build
      */
     public void trainModel(Instances trainingInstances) throws Exception {
+        System.out.printf("Training RandomForest [Depth: %d][Thread: %d]%n",this.randomForest.getNumIterations(),this.randomForest.getNumExecutionSlots());
         float startTime = System.nanoTime();
         this.randomForest.buildClassifier(trainingInstances);
         this.trainNeededFlag = false;

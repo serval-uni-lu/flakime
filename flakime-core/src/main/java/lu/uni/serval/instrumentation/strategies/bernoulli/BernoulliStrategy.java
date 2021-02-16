@@ -23,6 +23,7 @@ public class BernoulliStrategy implements Strategy {
 
     @Override
     public double getTestFlakinessProbability(TestMethod test) {
+        double testProbability = Math.random();
         return 0;
     }
 

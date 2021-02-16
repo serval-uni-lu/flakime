@@ -21,6 +21,8 @@ import weka.core.SparseInstance;
 
 
 public class VocabularyStrategy implements Strategy {
+    private final int nTrees;
+    private final int nThreads;
     private Model model;
     private KerasTokenizer tokenizer;
     private Instances trainingInstances;
@@ -28,9 +30,11 @@ public class VocabularyStrategy implements Strategy {
     private final boolean trainModel;
     private Map<Integer,Double> probabilitiesPerStatement;
 
-    public VocabularyStrategy(String pathToModel, boolean trainModel) {
+    public VocabularyStrategy(String pathToModel, boolean trainModel,int nTrees,int nThread) {
         this.pathToModel = pathToModel;
         this.trainModel = trainModel;
+        this.nTrees = nTrees;
+        this.nThreads = nThread;
     }
 
     /**
@@ -83,7 +87,7 @@ public class VocabularyStrategy implements Strategy {
         this.trainingInstances = this.createInstances(tokenizer,y_train.size(),dataTrain,y_train);
 
 
-        this.model = new Model();
+        this.model = new Model(this.nTrees,this.nThreads);
         this.model.trainModel(this.trainingInstances);
 //        this.model = new Model(originalTrainingData,additionalMethodsBody);
     }
@@ -118,9 +122,11 @@ public class VocabularyStrategy implements Strategy {
         try {
             Map<Integer,String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(),test);
             String completeBody = methodBodyText.values().stream().reduce((a,b) -> a+" "+b).orElseThrow(() -> new IllegalStateException(String.format("Method body of %s is empty",test.getName())));
+
             Instance bodyInstance = this.createSingleInstance(completeBody,0,this.tokenizer);
             bodyInstance.setDataset(this.trainingInstances);
             testFlakinessProbability = this.model.classify(bodyInstance);
+            System.out.printf("[%s][%f][%s]%n",test.getName(),testFlakinessProbability,completeBody);
             computeStatementProbability(test);
         } catch (Exception e) {
             e.printStackTrace();
@@ -144,7 +150,7 @@ public class VocabularyStrategy implements Strategy {
         this.probabilitiesPerStatement = new HashMap<>();
         double statementProbability = 0.0;
         Map<Integer,String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(),test);
-        System.out.printf("[%s]****%n",test.getName());
+//        System.out.printf("[%s]****%n",test.getName());
         for (Integer statementNum: test.getStatementLineNumbers()) {
             String stmtString = getTextBodyToLine(methodBodyText,statementNum);
             Instance instance = this.createSingleInstance(stmtString,0,this.tokenizer);
@@ -212,13 +218,11 @@ public class VocabularyStrategy implements Strategy {
      * @throws IOException thrown if the test file could not be read
      */
     public Map<Integer, String> getTestMethodBodyText(File f,TestMethod method) throws IOException {
-        List<String> sb = new ArrayList<>();
+//        List<String> sb = new ArrayList<>();
         Map<Integer, String> resultBody = new HashMap<>();
         BufferedReader br = new BufferedReader(new FileReader(f));
         String line;
-        while ((line = br.readLine()) != null) {
-            sb.add(line);
-        }
+        List<String> sb = br.lines().collect(Collectors.toList());
         int size = method.getControlFlow().basicBlocks().length;
         LineNumberAttribute ainfo = (LineNumberAttribute)method.getCtMethod().getMethodInfo()
                 .getCodeAttribute().getAttribute(LineNumberAttribute.tag);
@@ -227,17 +231,18 @@ public class VocabularyStrategy implements Strategy {
             int index = b.index();
             int length = b.length();
             int pos = b.position();
-//            System.out.printf("[%s][index: %d][length: %d][position: %d]%n",method.getName(),index,length,pos);
+
             int startLineNumber = ainfo.toLineNumber(pos);
             int endLineNumber = ainfo.toLineNumber(pos+length);
             int lineNumberMethodInfo = method.getCtMethod().getMethodInfo().getLineNumber(pos);
+//            System.out.printf("[%s][startLine: %d][endLine: %d][lineNumberMethodInfo: %d]%n",method.getName(),startLineNumber,endLineNumber,lineNumberMethodInfo);
             String completeString = "";
             StringBuilder stringBuilder = new StringBuilder();
             for(int ln = startLineNumber;ln<=endLineNumber;ln++){
-                stringBuilder.append(sb.get(ln));
-                completeString = stringBuilder.toString();
+//                System.out.printf("[%s][%d][%s]%n",method.getName(),ln,sb.get(ln-1));
+                stringBuilder.append(sb.get(ln-1));
             }
-            resultBody.put(startLineNumber,completeString);
+            resultBody.put(startLineNumber,stringBuilder.toString());
         }
 
         return resultBody;
