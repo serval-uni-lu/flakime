@@ -3,6 +3,9 @@ package lu.uni.serval.instrumentation.strategies.vocabulary;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import javassist.bytecode.LineNumberAttribute;
+import javassist.bytecode.analysis.ControlFlow;
 import lu.uni.serval.data.Project;
 import lu.uni.serval.data.TestClass;
 import lu.uni.serval.data.TestMethod;
@@ -143,7 +146,8 @@ public class VocabularyStrategy implements Strategy {
         Map<Integer,String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(),test);
         System.out.printf("[%s]****%n",test.getName());
         for (Integer statementNum: test.getStatementLineNumbers()) {
-            Instance instance = this.createSingleInstance(getTextBodyToLine(methodBodyText,statementNum),0,this.tokenizer);
+            String stmtString = getTextBodyToLine(methodBodyText,statementNum);
+            Instance instance = this.createSingleInstance(stmtString,0,this.tokenizer);
             instance.setDataset(this.trainingInstances);
 
             statementProbability = this.model.classify(instance);
@@ -190,8 +194,10 @@ public class VocabularyStrategy implements Strategy {
     public String getTextBodyToLine(Map<Integer,String> methodBodyText, int lineNumber){
         StringBuilder sb = new StringBuilder();
         for(Integer ln:methodBodyText.keySet()){
+            String text = methodBodyText.get(ln);
+//            System.out.printf("[lineNumber: %d][ln: %d][%s]%n",lineNumber,ln,text);
             if(ln <= lineNumber){
-                sb.append(methodBodyText.get(ln)).append(" ");
+                sb.append(text).append(" ");
             }
         }
         return sb.toString();
@@ -214,11 +220,24 @@ public class VocabularyStrategy implements Strategy {
             sb.add(line);
         }
         int size = method.getControlFlow().basicBlocks().length;
+        LineNumberAttribute ainfo = (LineNumberAttribute)method.getCtMethod().getMethodInfo()
+                .getCodeAttribute().getAttribute(LineNumberAttribute.tag);
 
-        for(int i = 0 ; i <size ; i++){
-            int lineNumber = method.getCtMethod().getMethodInfo().getLineNumber(i);
-            String res = sb.get(lineNumber);
-            resultBody.put(lineNumber,res);
+        for(ControlFlow.Block b : method.getControlFlow().basicBlocks()){
+            int index = b.index();
+            int length = b.length();
+            int pos = b.position();
+//            System.out.printf("[%s][index: %d][length: %d][position: %d]%n",method.getName(),index,length,pos);
+            int startLineNumber = ainfo.toLineNumber(pos);
+            int endLineNumber = ainfo.toLineNumber(pos+length);
+            int lineNumberMethodInfo = method.getCtMethod().getMethodInfo().getLineNumber(pos);
+            String completeString = "";
+            StringBuilder stringBuilder = new StringBuilder();
+            for(int ln = startLineNumber;ln<=endLineNumber;ln++){
+                stringBuilder.append(sb.get(ln));
+                completeString = stringBuilder.toString();
+            }
+            resultBody.put(startLineNumber,completeString);
         }
 
         return resultBody;

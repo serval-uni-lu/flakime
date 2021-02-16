@@ -33,9 +33,9 @@ public class Model {
      *
      */
     public Model(){
-        int nbtrees = 5;
+        int nbtrees = 100;
         int random_state = 0;
-        int numberOfThreads = 5;
+        int numberOfThreads = 12;
 
         RandomForest forest = new RandomForest();
         forest.setNumIterations(nbtrees);
