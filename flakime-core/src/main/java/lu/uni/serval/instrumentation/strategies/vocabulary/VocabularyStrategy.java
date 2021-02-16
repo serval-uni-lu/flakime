@@ -190,7 +190,6 @@ public class VocabularyStrategy implements Strategy {
 
     }
 
-
     /**
      * Method to get the string corresponding to the codeblock from the beginning of the method until a specific line number.
      * @param methodBodyText The whole method body with the corresponding line number. Each entry corresponds to a a line number and its corresponding text.
@@ -201,7 +200,6 @@ public class VocabularyStrategy implements Strategy {
         StringBuilder sb = new StringBuilder();
         for(Integer ln:methodBodyText.keySet()){
             String text = methodBodyText.get(ln);
-//            System.out.printf("[lineNumber: %d][ln: %d][%s]%n",lineNumber,ln,text);
             if(ln <= lineNumber){
                 sb.append(text).append(" ");
             }
@@ -218,28 +216,18 @@ public class VocabularyStrategy implements Strategy {
      * @throws IOException thrown if the test file could not be read
      */
     public Map<Integer, String> getTestMethodBodyText(File f,TestMethod method) throws IOException {
-//        List<String> sb = new ArrayList<>();
         Map<Integer, String> resultBody = new HashMap<>();
         BufferedReader br = new BufferedReader(new FileReader(f));
-        String line;
         List<String> sb = br.lines().collect(Collectors.toList());
-        int size = method.getControlFlow().basicBlocks().length;
         LineNumberAttribute ainfo = (LineNumberAttribute)method.getCtMethod().getMethodInfo()
                 .getCodeAttribute().getAttribute(LineNumberAttribute.tag);
-
         for(ControlFlow.Block b : method.getControlFlow().basicBlocks()){
-            int index = b.index();
             int length = b.length();
             int pos = b.position();
-
             int startLineNumber = ainfo.toLineNumber(pos);
             int endLineNumber = ainfo.toLineNumber(pos+length);
-            int lineNumberMethodInfo = method.getCtMethod().getMethodInfo().getLineNumber(pos);
-//            System.out.printf("[%s][startLine: %d][endLine: %d][lineNumberMethodInfo: %d]%n",method.getName(),startLineNumber,endLineNumber,lineNumberMethodInfo);
-            String completeString = "";
             StringBuilder stringBuilder = new StringBuilder();
             for(int ln = startLineNumber;ln<=endLineNumber;ln++){
-//                System.out.printf("[%s][%d][%s]%n",method.getName(),ln,sb.get(ln-1));
                 stringBuilder.append(sb.get(ln-1));
             }
             resultBody.put(startLineNumber,stringBuilder.toString());
