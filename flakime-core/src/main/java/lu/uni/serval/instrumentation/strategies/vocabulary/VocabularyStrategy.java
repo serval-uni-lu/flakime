@@ -58,7 +58,6 @@ public class VocabularyStrategy implements Strategy {
 
         List<Integer> y_train = trainingData.getEntries().stream().map(entry -> entry.label).collect(Collectors.toList());
 
-
         String[] dataTrain = trainingData.getEntries().stream().map(entry -> entry.body).toArray(String[]::new);
         String[] additionalTrain = additionalTrainingText.toArray(new String[0]);
 
@@ -126,11 +125,10 @@ public class VocabularyStrategy implements Strategy {
         try {
             Map<Integer,String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(),test);
             String completeBody = methodBodyText.values().stream().reduce((a,b) -> a+" "+b).orElseThrow(() -> new IllegalStateException(String.format("Method body of %s is empty",test.getName())));
-
             Instance bodyInstance = this.createSingleInstance(completeBody,0,this.tokenizer);
             bodyInstance.setDataset(this.trainingInstances);
             testFlakinessProbability = this.model.classify(bodyInstance);
-            this.logger.debug(String.format("[%s][%f][%s]%n",test.getName(),testFlakinessProbability,completeBody));
+//            this.logger.debug(String.format("[%s][%f][%s]%n",test.getName(),testFlakinessProbability,completeBody));
 
             computeStatementProbability(test);
         } catch (Exception e) {
@@ -162,7 +160,7 @@ public class VocabularyStrategy implements Strategy {
             instance.setDataset(this.trainingInstances);
 
             statementProbability = this.model.classify(instance);
-            this.logger.debug(String.format("[%s][statement:%d][p(statement): %f]%n",test.getName(),statementNum,statementProbability));
+//            this.logger.debug(String.format("[%s][statement:%d][p(statement): %f]%n",test.getName(),statementNum,statementProbability));
             this.probabilitiesPerStatement.put(statementNum,statementProbability);
             totalProbabilities += statementProbability;
         }
@@ -171,7 +169,6 @@ public class VocabularyStrategy implements Strategy {
         for (Integer statementNum: test.getStatementLineNumbers()) {
             double unNormalizedP = this.probabilitiesPerStatement.get(statementNum);
             double statementPnormalized = unNormalizedP/totalProbabilities;
-            //If considered that the more line of code, the more chances to flake
             aggregateProbability += statementPnormalized;
             this.probabilitiesPerStatement.put(statementNum,aggregateProbability);
         }
@@ -226,12 +223,15 @@ public class VocabularyStrategy implements Strategy {
         List<String> sb = br.lines().collect(Collectors.toList());
         LineNumberAttribute ainfo = (LineNumberAttribute)method.getCtMethod().getMethodInfo()
                 .getCodeAttribute().getAttribute(LineNumberAttribute.tag);
+
         for(ControlFlow.Block b : method.getControlFlow().basicBlocks()){
+
             int length = b.length();
             int pos = b.position();
             int startLineNumber = ainfo.toLineNumber(pos);
             int endLineNumber = ainfo.toLineNumber(pos+length);
             StringBuilder stringBuilder = new StringBuilder();
+//            logger.info(String.format("[%s][%d/%d][START:%d (%d)][END:%d (%d)][length: %d]%n",method.getName(),b.position(),startLineNumber,method.getControlFlow().basicBlocks().length,b.position(),b.position()+b.length(),endLineNumber,b.length()));
             for(int ln = startLineNumber;ln<=endLineNumber;ln++){
                 stringBuilder.append(sb.get(ln-1));
             }

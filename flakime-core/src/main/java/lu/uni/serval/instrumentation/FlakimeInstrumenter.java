@@ -1,6 +1,7 @@
 package lu.uni.serval.instrumentation;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import lu.uni.serval.data.TestMethod;
 import lu.uni.serval.instrumentation.strategies.Strategy;
 
@@ -12,31 +13,33 @@ import java.time.Instant;
  */
 public class FlakimeInstrumenter {
     private static final String randomVariableName = "__FLAKIME_RANDOM_VARIABLE__" + Instant.now().getEpochSecond();
+    private static final String flakimeInjectorFlag = "__FLAKIME_INJECTOR_FLAG__";
 
     public static void instrument(TestMethod testMethod, float flakeRate, Strategy strategy) throws CannotCompileException {
-        testMethod.addLocalVariableDouble(randomVariableName);
-        testMethod.insertAt(0,String.format("%s = %f;",randomVariableName, Math.random()));
+        testMethod.addLocalVariable(randomVariableName, CtClass.doubleType);
+        testMethod.addLocalVariable(flakimeInjectorFlag,CtClass.booleanType);
+        testMethod.insertBefore(String.format("%s = %f;",randomVariableName, Math.random()));
+        testMethod.insertBefore(String.format("%s = Boolean.parseBoolean(System.getenv(\"FLAKE_FLAG_FLAKIME\"));",flakimeInjectorFlag));
 
         for(int lineNumber: testMethod.getStatementLineNumbers()){
             final String payload = computePayload(testMethod, strategy, flakeRate, lineNumber);
-            testMethod.insertAt(lineNumber + 1, payload);
+            testMethod.insertAt(lineNumber, payload);
         }
     }
 
     private static String computePayload(TestMethod testMethod, Strategy strategy, float flakeRate, int lineNumber){
-        //Rewrite so as the flakerate is taken in account only if the calculated flakiness proba is > 0
-
         StringBuilder result = new StringBuilder();
         String probability = strategy.getProbabilityFunction(testMethod, lineNumber);
 
+        //TODO Add environment var check to the inserted string
         if(Double.parseDouble(probability) > 0){
-            result.append("if(")
-//                    .append("+")
+            result.append("if( ")
+                    .append(flakimeInjectorFlag)
+                    .append(" && (")
                     .append(randomVariableName)
-//                    .append("+")
                     .append("<")
                     .append(probability)
-                    .append( "){throw new Exception(\"" )
+                    .append( ")){throw new Exception(\"" )
                     .append("[flakinessProba:")
                     .append(probability)
                     .append("]\");}");

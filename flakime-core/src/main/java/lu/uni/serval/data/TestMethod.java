@@ -49,7 +49,7 @@ public class TestMethod {
      */
     public Set<Integer> getStatementLineNumbers(){
         return Arrays.stream(this.controlFlow.basicBlocks())
-                .map(block -> this.ctMethod.getMethodInfo().getLineNumber(block.position())+1)
+                .map(block -> this.ctMethod.getMethodInfo().getLineNumber(block.position()))
                 .collect(Collectors.toSet());
     }
 
@@ -59,10 +59,17 @@ public class TestMethod {
      * @param variableName Unique variable identifier (Must not overwrite existing method or global variables names)
      * @throws CannotCompileException If the variable does no follow java syntax
      */
-    public void addLocalVariableDouble(String variableName) throws CannotCompileException {
-        this.ctMethod.addLocalVariable(variableName, CtClass.doubleType);
+    public void addLocalVariable(String variableName,CtClass type) throws CannotCompileException {
+        this.ctMethod.addLocalVariable(variableName, type);
     }
+    public void insertBefore(String payload){
+        try {
+            this.ctMethod.insertBefore(payload);
+        } catch (CannotCompileException e) {
 
+            e.printStackTrace();
+        }
+    }
     /**
      * Insert a source code payload at a certain index in the {@code CtMethod} instance
      * @param lineNumber The target line to insert the payload
@@ -71,14 +78,11 @@ public class TestMethod {
      */
     public void insertAt(int lineNumber, String payload) {
 
-        try {
-//            System.out.printf("%s line+1:%d line:%d%n",this.getName(),lineNumber,lineNumber-1);
-//            this.ctMethod.getMethodInfo().getCodeAttribute().setMaxStack(5);
-            this.ctMethod.insertAt(lineNumber, payload);
+        try { ;
+            int line = this.ctMethod.insertAt(lineNumber, payload);
         } catch (CannotCompileException e) {
             int maxStack = this.ctMethod.getMethodInfo().getCodeAttribute().getMaxStack();
             System.err.printf("%s line:%d %n",this.getName(),lineNumber);
-//            System.err.println("CannotCompile Maxstack: "+maxStack);
             e.printStackTrace();
         }
     }
