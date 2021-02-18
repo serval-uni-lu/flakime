@@ -45,7 +45,7 @@ The tool is packaged as a maven plugin and can be used by providing the followin
       </plugin>
 ```
 
-Available strategy are :
+Available strategies are :
 
 ###Bernoulli
 TBD
