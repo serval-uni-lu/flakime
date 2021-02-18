@@ -81,34 +81,7 @@ public class VocabularyStrategy implements Strategy {
     }
 
     /**
-     * Pre-process method to build a model on the given project.
-     * This method extract the vocabulary from each test methods, create a {@code KerasTokenizer} on the training data and computed additional data to extract the feature vectors
-     * and finally train the model on the training instance.
-     *
-     * @param p The project to run the Strategy on
-     * @throws Exception If the training data or method source file could not be read
-     */
-    public void preProcessBuildModel(final Project p) throws Exception {
-//        System.out.println("Entered preProcess()");
-
-
-//        this.model = new Model(originalTrainingData,additionalMethodsBody);
-    }
-
-    public void preProcessLoadModel(Project p,String modelPath) throws Exception {
-        //TODO Create/Load tokenizer
-
-        //TODO feature vector
-
-        //TODO Create the corresponding instances
-
-        //TODO Load model from file
-
-
-    }
-
-    /**
-     * Method to return the a particular block of test body probability to be flaky based on the previously trained model.
+     * Method to return the particular block of test body (identified by its starting line number) probability to be flaky based on the random Forest.
      *
      * @param test The test method which the codeblcok is.
      * @param lineNumber The line number at which a particular statement is executed
@@ -119,6 +92,13 @@ public class VocabularyStrategy implements Strategy {
         return String.valueOf(this.getStatementFlakinessProbability(test,lineNumber));
     }
 
+
+    /**
+     * Computes the overall test flakiness probability.
+     *
+     * @param test The targeted test to extract the flakiness probability from
+     * @return The probability of being flaky
+     */
     @Override
     public double getTestFlakinessProbability(TestMethod test) {
         double testFlakinessProbability =0.0;
@@ -210,7 +190,7 @@ public class VocabularyStrategy implements Strategy {
     }
 
     /**
-     * Retrieve the text set corresponding to a method in the source file
+     * Retrieve the text set corresponding to a method in the source file. The granularity is a {@code ControlFlow.Block} uniquely identified by its starting line number in the source code.
      *
      * @param f the source file
      * @param method the corresponding {@code TestMethod} instance
@@ -226,10 +206,11 @@ public class VocabularyStrategy implements Strategy {
 
         for(ControlFlow.Block b : method.getControlFlow().basicBlocks()){
 
-            int length = b.length();
-            int pos = b.position();
-            int startLineNumber = ainfo.toLineNumber(pos);
-            int endLineNumber = ainfo.toLineNumber(pos+length);
+            int length = b.length();//The ByteCode size of the Basic block
+            int pos = b.position(); //The position of the first byteCode instruction of the basic block
+            int startLineNumber = ainfo.toLineNumber(pos); //The corresponding line number in the source code
+            int endLineNumber = ainfo.toLineNumber(pos+length); //The First line of the next BasicBlock
+
             StringBuilder stringBuilder = new StringBuilder();
 //            logger.info(String.format("[%s][%d/%d][START:%d (%d)][END:%d (%d)][length: %d]%n",method.getName(),b.position(),startLineNumber,method.getControlFlow().basicBlocks().length,b.position(),b.position()+b.length(),endLineNumber,b.length()));
             for(int ln = startLineNumber;ln<=endLineNumber;ln++){
@@ -301,7 +282,7 @@ public class VocabularyStrategy implements Strategy {
 
 
     /**
-     * Method to create and fit a KerasTokenizer
+     * Method to create and fit a {@code KerasTokenizer}
      * @param trainingVocabulary The training testmethod bodies
      * @param additonalVocabulary The additional testmehtod bodies
      * @return The fitted kerasTokenizer
@@ -313,32 +294,16 @@ public class VocabularyStrategy implements Strategy {
         return tokenizer;
     }
 
-    public int getnTrees() {
-        return nTrees;
-    }
-
     public void setnTrees(int nTrees) {
         this.nTrees = nTrees;
-    }
-
-    public int getnThreads() {
-        return nThreads;
     }
 
     public void setnThreads(int nThreads) {
         this.nThreads = nThreads;
     }
 
-    public String getPathToModel() {
-        return pathToModel;
-    }
-
     public void setPathToModel(String pathToModel) {
         this.pathToModel = pathToModel;
-    }
-
-    public boolean isTrainModel() {
-        return trainModel;
     }
 
     public void setTrainModel(boolean trainModel) {
