@@ -67,10 +67,20 @@ public class TestMethod {
      * Insert a source code payload at a certain index in the {@code CtMethod} instance
      * @param lineNumber The target line to insert the payload
      * @param payload The source code to insert
-     * @throws CannotCompileException if the Compilation of source code fails
+     *  if the Compilation of source code fails
      */
-    public void insertAt(int lineNumber, String payload) throws CannotCompileException {
-        this.ctMethod.insertAt(lineNumber, payload);
+    public void insertAt(int lineNumber, String payload) {
+
+        try {
+//            System.out.printf("%s line+1:%d line:%d%n",this.getName(),lineNumber,lineNumber-1);
+//            this.ctMethod.getMethodInfo().getCodeAttribute().setMaxStack(5);
+            this.ctMethod.insertAt(lineNumber, payload);
+        } catch (CannotCompileException e) {
+            int maxStack = this.ctMethod.getMethodInfo().getCodeAttribute().getMaxStack();
+            System.err.printf("%s line:%d %n",this.getName(),lineNumber);
+//            System.err.println("CannotCompile Maxstack: "+maxStack);
+            e.printStackTrace();
+        }
     }
 
     /**
