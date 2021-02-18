@@ -74,7 +74,7 @@ public class FlakimeMojo extends AbstractMojo {
                         double probability = strategyImpl.getTestFlakinessProbability(testMethod);
 //                        getLog().info(String.format("Probability of %s: %f",testMethod.getName(),probability));
                         if(probability > (1-flakeRate))
-                            FlakimeInstrumenter.instrument(testMethod, flakeRate, strategyImpl);
+                            FlakimeInstrumenter.instrument(testMethod, strategyImpl);
                     } catch (CannotCompileException e) {
                         logger.warn(String.format(
                                 "Failed to instrument method %s: %s",
