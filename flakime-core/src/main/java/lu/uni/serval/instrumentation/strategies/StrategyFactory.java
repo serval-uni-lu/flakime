@@ -15,9 +15,9 @@ public class StrategyFactory {
         }
 
         if (name.trim().equalsIgnoreCase("vocabulary")){
-            boolean trainModel = Boolean.parseBoolean(Optional.of(properties.getProperty("trainModel")).orElse("true"));
-            String nTrees = Optional.of(properties.getProperty("randomForestTrees")).orElse(String.valueOf(100));
-            String nCores = Optional.of(properties.getProperty("randomForestThreads")).orElse(String.valueOf(1));
+            boolean trainModel = Boolean.parseBoolean(Optional.ofNullable(properties.getProperty("trainModel")).orElse("true"));
+            String nTrees = Optional.ofNullable(properties.getProperty("randomForestTrees")).orElse(String.valueOf(100));
+            String nCores = Optional.ofNullable(properties.getProperty("randomForestThreads")).orElse(String.valueOf(1));
             String pathModel = "";
             if(!trainModel){
                 pathModel = Optional.ofNullable(properties.getProperty("modelPath")).orElseThrow(() -> new FileNotFoundException("Path to the pre-trained model must be provided"));
