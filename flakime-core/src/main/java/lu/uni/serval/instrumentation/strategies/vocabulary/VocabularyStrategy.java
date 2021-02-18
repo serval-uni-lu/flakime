@@ -12,6 +12,7 @@ import lu.uni.serval.data.TestMethod;
 import lu.uni.serval.instrumentation.strategies.Strategy;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.maven.plugin.logging.Log;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.KerasTokenizer;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;
 import weka.core.Attribute;
@@ -21,20 +22,18 @@ import weka.core.SparseInstance;
 
 
 public class VocabularyStrategy implements Strategy {
-    private final int nTrees;
-    private final int nThreads;
+    private final Log logger;
+    private int nTrees;
+    private int nThreads;
     private Model model;
     private KerasTokenizer tokenizer;
     private Instances trainingInstances;
-    private final String pathToModel;
-    private final boolean trainModel;
+    private String pathToModel;
+    private boolean trainModel;
     private Map<Integer,Double> probabilitiesPerStatement;
 
-    public VocabularyStrategy(String pathToModel, boolean trainModel,int nTrees,int nThread) {
-        this.pathToModel = pathToModel;
-        this.trainModel = trainModel;
-        this.nTrees = nTrees;
-        this.nThreads = nThread;
+    public VocabularyStrategy(Log logger) {
+        this.logger = logger;
     }
 
     /**
@@ -45,25 +44,6 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public void preProcess(final Project p) throws Exception {
-
-        if(trainModel)
-            preProcessBuildModel(p);
-        else
-            preProcessLoadModel(p, pathToModel);
-
-        //TODO Selection between preProcessBuildModel() and preProcessLoadModel()
-    }
-
-    /**
-     * Pre-process method to build a model on the given project.
-     * This method extract the vocabulary from each test methods, create a {@code KerasTokenizer} on the training data and computed additional data to extract the feature vectors
-     * and finally train the model on the training instance.
-     *
-     * @param p The project to run the Strategy on
-     * @throws Exception If the training data or method source file could not be read
-     */
-    public void preProcessBuildModel(final Project p) throws Exception {
-//        System.out.println("Entered preProcess()");
         final InputStream dataSource = VocabularyStrategy.class.getClassLoader().getResourceAsStream("data/vocabulary.json");
         final TrainingData trainingData = new TrainingData(dataSource);
         Set<String> additionalTrainingText = new HashSet<>();
@@ -82,13 +62,37 @@ public class VocabularyStrategy implements Strategy {
         String[] dataTrain = trainingData.getEntries().stream().map(entry -> entry.body).toArray(String[]::new);
         String[] additionalTrain = additionalTrainingText.toArray(new String[0]);
 
-        //Initialize tokeniser on trainData + additional text body
         this.tokenizer = this.createTokenizer(dataTrain,additionalTrain);
-        this.trainingInstances = this.createInstances(tokenizer,y_train.size(),dataTrain,y_train);
+        this.trainingInstances = this.createInstances(tokenizer, y_train.size(), dataTrain, y_train);
+
+        if(trainModel)
+        {
+            this.model = new Model(this.logger,this.nTrees, this.nThreads);
+            this.logger.info(String.format("Training Random forest Classifier on %d threads with %d trees",this.nThreads,this.nTrees));
+            this.model.trainModel(this.trainingInstances);
+            String model_path = "rfc_classifier";
+            this.model.save(model_path);
+            logger.info(String.format("Model saved under [%s]",model_path));
+
+        }
+        else
+        {
+            this.model = new Model(this.logger,this.pathToModel);
+        }
+    }
+
+    /**
+     * Pre-process method to build a model on the given project.
+     * This method extract the vocabulary from each test methods, create a {@code KerasTokenizer} on the training data and computed additional data to extract the feature vectors
+     * and finally train the model on the training instance.
+     *
+     * @param p The project to run the Strategy on
+     * @throws Exception If the training data or method source file could not be read
+     */
+    public void preProcessBuildModel(final Project p) throws Exception {
+//        System.out.println("Entered preProcess()");
 
 
-        this.model = new Model(this.nTrees,this.nThreads);
-        this.model.trainModel(this.trainingInstances);
 //        this.model = new Model(originalTrainingData,additionalMethodsBody);
     }
 
@@ -100,7 +104,7 @@ public class VocabularyStrategy implements Strategy {
         //TODO Create the corresponding instances
 
         //TODO Load model from file
-        this.model = new Model(modelPath);
+
 
     }
 
@@ -126,7 +130,8 @@ public class VocabularyStrategy implements Strategy {
             Instance bodyInstance = this.createSingleInstance(completeBody,0,this.tokenizer);
             bodyInstance.setDataset(this.trainingInstances);
             testFlakinessProbability = this.model.classify(bodyInstance);
-            System.out.printf("[%s][%f][%s]%n",test.getName(),testFlakinessProbability,completeBody);
+            this.logger.debug(String.format("[%s][%f][%s]%n",test.getName(),testFlakinessProbability,completeBody));
+
             computeStatementProbability(test);
         } catch (Exception e) {
             e.printStackTrace();
@@ -157,7 +162,7 @@ public class VocabularyStrategy implements Strategy {
             instance.setDataset(this.trainingInstances);
 
             statementProbability = this.model.classify(instance);
-            System.out.printf("[%s][statement:%d][p(statement): %f]%n",test.getName(),statementNum,statementProbability);
+            this.logger.debug(String.format("[%s][statement:%d][p(statement): %f]%n",test.getName(),statementNum,statementProbability));
             this.probabilitiesPerStatement.put(statementNum,statementProbability);
             totalProbabilities += statementProbability;
         }
@@ -306,5 +311,37 @@ public class VocabularyStrategy implements Strategy {
         KerasTokenizer tokenizer = new KerasTokenizer();
         tokenizer.fitOnTexts(concat);
         return tokenizer;
+    }
+
+    public int getnTrees() {
+        return nTrees;
+    }
+
+    public void setnTrees(int nTrees) {
+        this.nTrees = nTrees;
+    }
+
+    public int getnThreads() {
+        return nThreads;
+    }
+
+    public void setnThreads(int nThreads) {
+        this.nThreads = nThreads;
+    }
+
+    public String getPathToModel() {
+        return pathToModel;
+    }
+
+    public void setPathToModel(String pathToModel) {
+        this.pathToModel = pathToModel;
+    }
+
+    public boolean isTrainModel() {
+        return trainModel;
+    }
+
+    public void setTrainModel(boolean trainModel) {
+        this.trainModel = trainModel;
     }
 }

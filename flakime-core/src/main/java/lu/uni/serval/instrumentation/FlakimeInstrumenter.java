@@ -19,7 +19,6 @@ public class FlakimeInstrumenter {
 
         for(int lineNumber: testMethod.getStatementLineNumbers()){
             final String payload = computePayload(testMethod, strategy, flakeRate, lineNumber);
-            System.out.println("Inserting ***"+payload+"***");
             testMethod.insertAt(lineNumber + 1, payload);
         }
     }

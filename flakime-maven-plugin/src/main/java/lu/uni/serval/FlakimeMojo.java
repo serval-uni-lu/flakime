@@ -50,25 +50,25 @@ public class FlakimeMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         Strategy strategyImpl = null;
-
+        Log logger = getLog();
         try {
             final Project project = initializeProject(mavenProject);
-            strategyImpl = StrategyFactory.fromName(strategy,strategyParameters);
+            strategyImpl = StrategyFactory.fromName(strategy,strategyParameters,logger);
 
-            getLog().info(String.format("Strategy %s loaded",strategyImpl.getClass().getName()));
-            getLog().info(String.format("FlakeRate: %f",flakeRate));
-            getLog().info(String.format("Found %d classes", project.getNumberClasses()));
+            logger.info(String.format("Strategy %s loaded",strategyImpl.getClass().getName()));
+            logger.info(String.format("FlakeRate: %f",flakeRate));
+            logger.info(String.format("Found %d classes", project.getNumberClasses()));
 
-            getLog().debug("Running preProcess of "+strategyImpl.getClass().getSimpleName());
+            logger.debug("Running preProcess of "+strategyImpl.getClass().getSimpleName());
 
             strategyImpl.preProcess(project);
 
             for(TestClass testClass: project){
 
-                getLog().debug(String.format("Process class %s", testClass.getName()));
+                logger.debug(String.format("Process class %s", testClass.getName()));
 
                 for (TestMethod testMethod: testClass){
-                    getLog().debug(String.format("\tProcess method %s", testMethod.getName()));
+                    logger.debug(String.format("\tProcess method %s", testMethod.getName()));
 
                     try {
                         double probability = strategyImpl.getTestFlakinessProbability(testMethod);
@@ -76,7 +76,7 @@ public class FlakimeMojo extends AbstractMojo {
                         if(probability > (1-flakeRate))
                             FlakimeInstrumenter.instrument(testMethod, flakeRate, strategyImpl);
                     } catch (CannotCompileException e) {
-                        getLog().warn(String.format(
+                        logger.warn(String.format(
                                 "Failed to instrument method %s: %s",
                                 testMethod.getName(), e.getMessage()), e);
                     }
@@ -85,7 +85,7 @@ public class FlakimeMojo extends AbstractMojo {
                 testClass.write();
             }
         } catch (final Exception e) {
-            getLog().error(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             throw new MojoExecutionException(e.getMessage(), e);
         } finally {
             if(strategyImpl != null){

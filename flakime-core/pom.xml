@@ -121,6 +121,12 @@
             <version>2.14.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>3.6.3</version>
+            <scope>compile</scope>
+        </dependency>
 
 
     </dependencies>

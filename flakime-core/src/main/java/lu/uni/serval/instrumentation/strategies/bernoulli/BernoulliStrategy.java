@@ -4,15 +4,22 @@ import javafx.util.Pair;
 import lu.uni.serval.data.Project;
 import lu.uni.serval.data.TestMethod;
 import lu.uni.serval.instrumentation.strategies.Strategy;
+import org.apache.maven.plugin.logging.Log;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
 public class BernoulliStrategy implements Strategy {
+
+    private final Log logger;
+
+    public BernoulliStrategy(Log logger) {
+    this.logger = logger;
+    }
+
     @Override
     public void preProcess(Project p) {
-
 
     }
 

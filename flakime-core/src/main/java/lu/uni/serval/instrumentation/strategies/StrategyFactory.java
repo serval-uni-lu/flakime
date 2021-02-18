@@ -2,16 +2,16 @@ package lu.uni.serval.instrumentation.strategies;
 
 import lu.uni.serval.instrumentation.strategies.bernoulli.BernoulliStrategy;
 import lu.uni.serval.instrumentation.strategies.vocabulary.VocabularyStrategy;
+import org.apache.maven.plugin.logging.Log;
 
 import java.io.FileNotFoundException;
 import java.util.Optional;
 import java.util.Properties;
 
 public class StrategyFactory {
-    public static Strategy fromName(String name, Properties properties) throws ClassNotFoundException, FileNotFoundException {
-        //TODO Take into account Strategy properties
+    public static Strategy fromName(String name, Properties properties, Log logger) throws ClassNotFoundException, FileNotFoundException {
         if(name.trim().equalsIgnoreCase("bernoulli")){
-            return new BernoulliStrategy();
+            return  new BernoulliStrategy(logger);
         }
 
         if (name.trim().equalsIgnoreCase("vocabulary")){
@@ -22,8 +22,13 @@ public class StrategyFactory {
             if(!trainModel){
                 pathModel = Optional.ofNullable(properties.getProperty("modelPath")).orElseThrow(() -> new FileNotFoundException("Path to the pre-trained model must be provided"));
             }
+            VocabularyStrategy strategy = new VocabularyStrategy(logger);
+            strategy.setnThreads(Integer.parseInt(nCores));
+            strategy.setnTrees(Integer.parseInt(nTrees));
+            strategy.setTrainModel(trainModel);
+            strategy.setPathToModel(pathModel);
 
-            return new VocabularyStrategy(pathModel,trainModel,Integer.parseInt(nTrees),Integer.parseInt(nCores));
+            return strategy;
         }
 
         throw new ClassNotFoundException(String.format("Cannot find strategy with name: %s", name));
