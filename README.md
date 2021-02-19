@@ -1,7 +1,7 @@
 # Flakime 
 This project allows to simulate flakiness by injecting exception during compile time at selected locations.
 
-##Usage
+## Usage
 The tool is packaged as a maven plugin and can be used by providing the following plugin info in the target project `pom.xml`.
 
 ```
@@ -47,8 +47,8 @@ The tool is packaged as a maven plugin and can be used by providing the followin
 
 Available strategies are :
 
-###Bernoulli
+### Bernoulli
 TBD
 
-###Vocabulary
+### Vocabulary
 TBD
