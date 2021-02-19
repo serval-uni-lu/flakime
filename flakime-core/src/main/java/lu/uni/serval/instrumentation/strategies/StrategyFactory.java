@@ -9,6 +9,16 @@ import java.util.Optional;
 import java.util.Properties;
 
 public class StrategyFactory {
+    /**
+     * Factory pattern implementation. Returns the strategy instance from the corresponding type.
+     *
+     * @param name The strategy name
+     * @param properties The strategy properties
+     * @param logger The logger instance
+     * @return The strategy instance
+     * @throws ClassNotFoundException Thrown if the requested strategy does not exists
+     * @throws FileNotFoundException Thrown if the file corresponding to the model is not found.
+     */
     public static Strategy fromName(String name, Properties properties, Log logger) throws ClassNotFoundException, FileNotFoundException {
         if(name.trim().equalsIgnoreCase("bernoulli")){
             return  new BernoulliStrategy(logger);

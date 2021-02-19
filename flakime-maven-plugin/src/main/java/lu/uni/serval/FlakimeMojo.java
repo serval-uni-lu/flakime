@@ -58,7 +58,7 @@ public class FlakimeMojo extends AbstractMojo {
      * Otherwise the test method is skipped.
      *
      *
-     * @throws MojoExecutionException Thrown if any of the steps throw an exception during its execution.
+     * @throws MojoExecutionException Thrown if any of the steps throws an exception during its execution.
      */
 
     @Override
