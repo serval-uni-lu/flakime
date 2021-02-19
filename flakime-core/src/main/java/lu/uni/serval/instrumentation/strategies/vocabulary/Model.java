@@ -1,17 +1,18 @@
 package lu.uni.serval.instrumentation.strategies.vocabulary;
 
+import java.io.InputStream;
 import org.apache.maven.plugin.logging.Log;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 
-import java.io.*;
 
-
+/**
+ * Representation of an ml model. It holds the classifier object and the method allowing to (de)-serialize
+ * the classifier as well as training.
+ */
 public class Model {
-
-
 
     private final RandomForest randomForest;
     private final Log logger;
@@ -19,29 +20,30 @@ public class Model {
 
 
     /**
-     * Parameterized Constructor to create the model based on a pre-trained RandomForest
+     * Constructs a model based on a pre-trained RandomForest
      *
      * @param modelPath The path to the pre-trained RandomForest
-     *
      */
-    public Model(Log logger,String modelPath)  {
+    public Model(Log logger, String modelPath) throws Exception {
         RandomForest randomForest1;
         this.logger = logger;
         InputStream inputStream = null;
-        randomForest1 = new RandomForest();
-        try {
-//            inputStream = new FileInputStream(modelPath);
-//            ObjectInputStream objectInputStream = SerializationHelper.getObjectInputStream(inputStream);
-            randomForest1 = (RandomForest) SerializationHelper.read(modelPath);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+
+        randomForest1 = this.load(modelPath);
         this.logger.info("Successfully loader model");
-//        this.randomForest = (RandomForest) SerializationHelper.read(modelPath);
         this.randomForest = randomForest1;
         this.trainNeededFlag = false;
     }
-    public Model(Log logger,int nTrees, int nThreads) {
+
+    /**
+     * Constructs a model instance with specific number of trees and threads.
+     *
+     * @param logger   The logger attached to the running instance.
+     * @param nTrees   The number of trees for the Random forest.
+     * @param nThreads The number of threads used for the training.
+     */
+    public Model(Log logger, int nTrees, int nThreads) {
         this.logger = logger;
         RandomForest forest = new RandomForest();
         forest.setNumIterations(nTrees);
@@ -51,17 +53,15 @@ public class Model {
         this.randomForest = forest;
     }
 
-    public RandomForest getRandomForest() {
-        return randomForest;
-    }
-
-
-
     /**
-     * Non parameterized constructor that builds a RandomForest from scratch
+     * Non parameterized constructor that builds a RandomForest from scratch with default parameters
+     * Number of trees : 100
+     * random_state : 0
+     * number of threads for training : 12
      *
+     * @param logger The logger attached to the running instance.
      */
-    public Model(Log logger){
+    public Model(Log logger) {
         this.logger = logger;
         int nbtrees = 100;
         int random_state = 0;
@@ -77,7 +77,6 @@ public class Model {
 
     }
 
-
     /**
      * Method that will fit the classifier to the given Instances.
      *
@@ -91,7 +90,8 @@ public class Model {
         this.trainNeededFlag = false;
         float endTime = System.nanoTime();
 
-        this.logger.info(String.format("%nRFC took %.1f seconds to train%n",(endTime-startTime)/1000000000));
+        this.logger.info(String
+                .format("%nRFC took %.1f seconds to train%n", (endTime - startTime) / 1000000000));
 
     }
 
@@ -103,14 +103,32 @@ public class Model {
      * @throws Exception Throw if model needs to be trained
      */
     public double classify(Instance instance) throws Exception {
-        if(this.trainNeededFlag){
+        if (this.trainNeededFlag) {
             throw new IllegalStateException("The model is not fitted");
         }
 
-        return this.randomForest.classifyInstance(instance) ;
+        return this.randomForest.classifyInstance(instance);
     }
 
+    /**
+     * Method to load a random forest from a serialized file
+     *
+     * @param path The path to the serialized RandomForest
+     * @return Deserialized {@code weka.RandomForest} instance
+     * @throws Exception Thrown if the random forest can not be deserialized.
+     */
+    public RandomForest load(String path) throws Exception {
+        //FIXME stackoverflow error is thrown if the stack size is to low (must be manually set by -Xss10m)
+        return (RandomForest) SerializationHelper.read(path);
+    }
+
+    /**
+     * Serialize the Random forest instance and save to a path
+     *
+     * @param path The path to the randomforest file
+     * @throws Exception Thrown if the file would not be written
+     */
     public void save(String path) throws Exception {
-        SerializationHelper.write(path,this.randomForest);
+        SerializationHelper.write(path, this.randomForest);
     }
 }
