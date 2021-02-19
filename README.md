@@ -1,9 +1,8 @@
 # Flakime 
-This project allows to simulate flakiness by injecting exception during compile time at selected locations.
+This project allows simulating flakiness by injecting exception during test sources compilation at computed locations.
 
 ## Usage
 The tool is packaged as a maven plugin and can be used by providing the following plugin info in the target project `pom.xml`.
-
 ```xml
 <plugin>
     <groupId>lu.uni.serval</groupId>
@@ -18,6 +17,10 @@ The tool is packaged as a maven plugin and can be used by providing the followin
     </executions>
 </plugin>
 ```
+
+An environment variable should also be set for the instrumentation to be executed : \
+`FLAKE_FLAG_FLAKIME` : string boolean. If not found or set to `False` the instrumentation will have no effect on the test suite.
+
 
 #### Common configuration :
 | tag                  | type & range                   | default   | required | description                                                                    |
@@ -73,21 +76,4 @@ The tool is packaged as a maven plugin and can be used by providing the followin
 TBD
 
 ### Vocabulary Strategy
-<strategyParameters>
-    <property>
-      <name>trainModel</name>
-      <value>false</value>
-    </property>
-    <property>
-      <name>modelPath</name>
-      <value>rfc_classifier</value>
-    </property>
-    <property>
-      <name>randomForestTrees</name>
-      <value>20</value>
-    </property>
-    <property>
-      <name>randomForestThreads</name>
-      <value>12</value>
-    </property>
-</strategyParameters>
+TBD
