@@ -13,8 +13,7 @@ import lu.uni.serval.instrumentation.strategies.Strategy;
 public class FlakimeInstrumenter {
     private static final String randomVariableName =
             "__FLAKIME_RANDOM_VARIABLE__" + Instant.now().getEpochSecond();
-    private static final String flakimeInjectorFlag =
-            "__FLAKIME_INJECTOR_FLAG__";
+    private static final String flakimeInjectorFlag = "__FLAKIME_INJECTOR_FLAG__";
 
     /**
      * Method that will trigger the computation of the payload and the injection of the correct local variables.
