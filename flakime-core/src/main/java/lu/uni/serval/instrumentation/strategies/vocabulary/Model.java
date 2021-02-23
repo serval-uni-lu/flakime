@@ -22,7 +22,9 @@ public class Model {
     /**
      * Constructs a model based on a pre-trained RandomForest
      *
+     * @param logger Reference to logger
      * @param modelPath The path to the pre-trained RandomForest
+     * @throws Exception Thrown if the model can not be deserialized.
      */
     public Model(Log logger, String modelPath) throws Exception {
         RandomForest randomForest1;

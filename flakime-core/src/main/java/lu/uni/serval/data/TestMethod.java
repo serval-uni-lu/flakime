@@ -57,6 +57,7 @@ public class TestMethod {
      * Helper function to insert a new double variable in the {@code CtMethod} context
      *
      * @param variableName Unique variable identifier (Must not overwrite existing method or global variables names)
+     * @param type Class of the parameter to add
      * @throws CannotCompileException If the variable does no follow java syntax
      */
     public void addLocalVariable(String variableName,CtClass type) throws CannotCompileException {
