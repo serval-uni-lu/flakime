@@ -1,4 +1,4 @@
-package lu.uni.serval.data;
+package lu.uni.serval.flakime.core.data;
 
 import javassist.*;
 
@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import lu.uni.serval.flakime.core.utils.Logger;
 import org.apache.commons.io.FileUtils;
 
 import static org.apache.commons.io.FilenameUtils.removeExtension;
 
 public class Project implements Iterable<TestClass> {
+    private final Logger logger;
     private final Set<String> testAnnotations;
     private final File classDirectory;
     private final File sourceDirectory;
@@ -19,7 +21,8 @@ public class Project implements Iterable<TestClass> {
 
     private Set<String> classNames;
 
-    public Project(Set<String> testAnnotations, File classDirectory, File sourceDirectory, List<String> dependencies) throws NotFoundException {
+    public Project(Logger logger, Set<String> testAnnotations, File classDirectory, File sourceDirectory, List<String> dependencies) throws NotFoundException {
+        this.logger = logger;
         this.testAnnotations = testAnnotations;
         this.classDirectory = classDirectory;
         this.sourceDirectory = sourceDirectory;
@@ -34,7 +37,7 @@ public class Project implements Iterable<TestClass> {
     public Iterator<TestClass> iterator(){
         return getClassNames().stream()
                 .map(name -> getSourceFile(name)
-                        .map(file -> TestClassFactory.create(this.testAnnotations, name, this.classPool, file, this.classDirectory))
+                        .map(file -> TestClassFactory.create(this.logger, this.testAnnotations, name, this.classPool, file, this.classDirectory))
                         .orElse(null)
                 )
                 .filter(Objects::nonNull)
@@ -102,7 +105,7 @@ public class Project implements Iterable<TestClass> {
         return file.exists() ? Optional.of(file) : Optional.empty();
     }
 
-    private static String extractClassNameFromFile(final File parentDirectory, final File classFile) {
+    private String extractClassNameFromFile(final File parentDirectory, final File classFile) {
         if (null == classFile) {
             return null;
         }
@@ -111,10 +114,14 @@ public class Project implements Iterable<TestClass> {
 
         try {
             qualifiedFileName = parentDirectory != null
-                    ? classFile.getCanonicalPath()
-                    .substring(parentDirectory.getCanonicalPath().length() + 1)
+                    ? classFile.getCanonicalPath().substring(parentDirectory.getCanonicalPath().length() + 1)
                     : classFile.getCanonicalPath();
         } catch (IOException e) {
+            logger.warn(String.format("Failed to extract class name from file %s: %s",
+                    classFile.getAbsolutePath(),
+                    e.getMessage())
+            );
+
             return null;
         }
 

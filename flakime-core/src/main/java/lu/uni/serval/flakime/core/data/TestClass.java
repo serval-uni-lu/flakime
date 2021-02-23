@@ -1,8 +1,9 @@
-package lu.uni.serval.data;
+package lu.uni.serval.flakime.core.data;
 
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
+import lu.uni.serval.flakime.core.utils.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,12 +14,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TestClass implements Iterable<TestMethod> {
+    private final Logger logger;
     private final Set<String> testAnnotations;
     private final CtClass ctClass;
     private final File sourceFile;
     private final File outputDirectory;
 
-    public TestClass(Set<String> testAnnotations, CtClass ctClass, File sourceFile, File outputDirectory) {
+    public TestClass(Logger logger, Set<String> testAnnotations, CtClass ctClass, File sourceFile, File outputDirectory) {
+        this.logger = logger;
         this.testAnnotations = testAnnotations;
         this.ctClass = ctClass;
         this.sourceFile = sourceFile;
@@ -26,6 +29,7 @@ public class TestClass implements Iterable<TestMethod> {
     }
 
     public void write() throws IOException, CannotCompileException {
+        this.logger.debug(String.format("Write class to %s", outputDirectory.getAbsolutePath()));
         this.ctClass.writeFile(outputDirectory.getAbsolutePath());
     }
 
@@ -33,7 +37,7 @@ public class TestClass implements Iterable<TestMethod> {
     public Iterator<TestMethod> iterator(){
         return Arrays.stream(ctClass.getDeclaredMethods())
                 .filter(TestClass.this::isTest)
-                .map(m -> TestMethodFactory.create(m, sourceFile))
+                .map(m -> TestMethodFactory.create(logger, m, sourceFile))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList())
                 .iterator();

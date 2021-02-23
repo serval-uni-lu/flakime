@@ -31,12 +31,12 @@ An environment variable should also be set for the instrumentation to be execute
 | `strategyParameters` | Array of key-value property    | none      |          | The parameters specific to each strategy implementation (see desc. bellow)     |
 
 #### Vocabulary strategy parameters :
-| key                   | value type & range | default | required                            | description                                                                                               |
-|-----------------------|--------------------|---------|-------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| `trainModel`          | boolean            | true    |                                     | Should the model be trained ?                                                                           |
-| `modelPath`           | string             |         | X (if `trainModel` is set to false) | The path to the pre-trained serialized model                                                              |
-| `randomForestTrees`   | integer : > 0      | 100     |                                     | The number of Trees the random forest will be composed of. (No effect if `trainModel` is set to false)    |
-| `randomForestThreads` | integer : > 0      | 1       |                                     | The number of threads used during the random forest training. (No effect if `trainModel` is set to false) |
+| key                   | value type & range | default                                            | required                            | description                                                                                               |
+|-----------------------|--------------------|----------------------------------------------------|-------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| `trainModel`          | boolean            | true                                               |                                     | Should the model be trained ?                                                                           |
+| `modelPath`           | string             |                                                    | X (if `trainModel` is set to false) | The path to the pre-trained serialized model                                                              |
+| `randomForestTrees`   | integer : > 0      | 100                                                |                                     | The number of Trees the random forest will be composed of. (No effect if `trainModel` is set to false)    |
+| `randomForestThreads` | integer : > 0      | Number of CPU cores available on the machine       |                                     | The number of threads used during the random forest training. (No effect if `trainModel` is set to false) |
 
 #### Bernoulli strategy parameters :
 
@@ -52,22 +52,10 @@ An environment variable should also be set for the instrumentation to be execute
     <annotation>@org.junit.Test</annotation>
   </testAnnotations>
   <strategyParameters>
-    <property>
-      <name>trainModel</name>
-      <value>false</value>
-    </property>
-    <property>
-      <name>modelPath</name>
-      <value>rfc_classifier</value>
-    </property>
-    <property>
-      <name>randomForestTrees</name>
-      <value>20</value>
-    </property>
-    <property>
-      <name>randomForestThreads</name>
-      <value>12</value>
-    </property>
+    <trainModel>false</trainModel>
+    <modelPath>rfc_classifier</modelPath>
+    <randomForestTrees>20</randomForestTrees>
+    <randomForestThreads>12</randomForestThreads>
   </strategyParameters>
 </configuration>
 ```

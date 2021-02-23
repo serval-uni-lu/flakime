@@ -1,4 +1,4 @@
-package lu.uni.serval.instrumentation.strategies.vocabulary;
+package lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,12 +16,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.analysis.ControlFlow;
-import lu.uni.serval.data.Project;
-import lu.uni.serval.data.TestClass;
-import lu.uni.serval.data.TestMethod;
-import lu.uni.serval.instrumentation.strategies.Strategy;
+import lu.uni.serval.flakime.core.data.Project;
+import lu.uni.serval.flakime.core.data.TestClass;
+import lu.uni.serval.flakime.core.data.TestMethod;
+import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
+import lu.uni.serval.flakime.core.utils.Logger;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.maven.plugin.logging.Log;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.KerasTokenizer;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;
 import weka.core.Attribute;
@@ -31,7 +31,7 @@ import weka.core.SparseInstance;
 
 
 public class VocabularyStrategy implements Strategy {
-    private final Log logger;
+    private final Logger logger;
     private int nTrees;
     private int nThreads;
     private Model model;
@@ -41,7 +41,7 @@ public class VocabularyStrategy implements Strategy {
     private boolean trainModel;
     private Map<Integer, Double> probabilitiesPerStatement;
 
-    public VocabularyStrategy(Log logger) {
+    public VocabularyStrategy(Logger logger) {
         this.logger = logger;
     }
 
@@ -53,45 +53,51 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public void preProcess(final Project p) throws Exception {
-        final InputStream dataSource = VocabularyStrategy.class.getClassLoader()
-                .getResourceAsStream("data/vocabulary.json");
+        final InputStream dataSource = VocabularyStrategy.class.getClassLoader().getResourceAsStream("data/vocabulary.json");
         final TrainingData trainingData = new TrainingData(dataSource);
-        Set<String> additionalTrainingText = new HashSet<>();
+        final Set<String> additionalTrainingText = new HashSet<>();
+
         for (TestClass testClass : p) {
             for (TestMethod testMethod : testClass) {
-                testMethod.getName();
-                File f = testMethod.getSourceCodeFile();
+                final File f = testMethod.getSourceCodeFile();
                 additionalTrainingText.addAll(this.getTestMethodBodyText(f, testMethod).values());
             }
         }
 
-
-        List<Integer> y_train = trainingData.getEntries().stream().map(entry -> entry.label)
+        final List<Integer> yTrain = trainingData.getEntries().stream()
+                .map(entry -> entry.label)
                 .collect(Collectors.toList());
 
-        String[] dataTrain =
-                trainingData.getEntries().stream().map(entry -> entry.body).toArray(String[]::new);
-        String[] additionalTrain = additionalTrainingText.toArray(new String[0]);
+        final String[] dataTrain = trainingData.getEntries().stream()
+                .map(entry -> entry.body)
+                .toArray(String[]::new);
+
+        final String[] additionalTrain = additionalTrainingText.toArray(new String[0]);
 
         this.tokenizer = this.createTokenizer(dataTrain, additionalTrain);
-        this.trainingInstances =
-                this.createInstances(tokenizer, y_train.size(), dataTrain, y_train);
+        this.trainingInstances = this.createInstances(tokenizer, yTrain.size(), dataTrain, yTrain);
 
         if (trainModel) {
             this.model = new Model(this.logger, this.nTrees, this.nThreads);
-            this.logger.info(String
-                    .format("Training Random forest Classifier on %d threads with %d trees",
-                            this.nThreads, this.nTrees));
+
+            this.logger.info(String.format("Training Random forest Classifier on %d threads with %d trees",
+                    this.nThreads,
+                    this.nTrees
+            ));
+
             this.model.trainModel(this.trainingInstances);
-            String model_path = "rfc_classifier";
-            this.model.save(model_path);
-            logger.info(String.format("Model saved under [%s]", model_path));
+            String modelPath = "rfc_classifier";
+            this.model.save(modelPath);
+            logger.info(String.format("Model saved under [%s]", modelPath));
 
         } else {
             try{
                 this.model = new Model(this.logger, this.pathToModel);
-            }catch (StackOverflowError stackOverflowError){
-                stackOverflowError.printStackTrace();
+            }catch (StackOverflowError e){
+                logger.error(String.format("Error occurred when training vocabulary model: [%s] %s",
+                        e.getClass().getSimpleName(),
+                        e.getMessage()
+                ));
             }
         }
     }
@@ -117,23 +123,26 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public double getTestFlakinessProbability(TestMethod test) {
-        double testFlakinessProbability = 0.0;
+        double testFlakinessProbability;
+
         try {
-            Map<Integer, String> methodBodyText =
-                    this.getTestMethodBodyText(test.getSourceCodeFile(), test);
-            String completeBody = methodBodyText.values().stream().reduce((a, b) -> a + " " + b)
-                    .orElseThrow(() -> new IllegalStateException(
-                            String.format("Method body of %s is empty", test.getName())));
-            Instance bodyInstance = this.createSingleInstance(completeBody, 0, this.tokenizer);
+            final Map<Integer, String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(), test);
+            final String completeBody = methodBodyText.values().stream()
+                    .reduce((a, b) -> a + " " + b)
+                    .orElseThrow(() -> new IllegalStateException(String.format("Method body of %s is empty", test.getName())));
+
+            final Instance bodyInstance = this.createSingleInstance(completeBody, 0, this.tokenizer);
             bodyInstance.setDataset(this.trainingInstances);
             testFlakinessProbability = this.model.classify(bodyInstance);
-//            this.logger.debug(String.format("[%s][%f][%s]%n",test.getName(),testFlakinessProbability,completeBody));
-
             computeStatementProbability(test);
         } catch (Exception e) {
-            e.printStackTrace();
-        }
+            this.logger.error(String.format("Failed to compute test probability, default to 0.0 for test '%s': %s",
+                    test.getName(),
+                    e.getMessage()
+            ));
 
+            testFlakinessProbability = 0.0;
+        }
 
         return testFlakinessProbability;
     }
@@ -148,20 +157,22 @@ public class VocabularyStrategy implements Strategy {
         double totalProbabilities = 0.0;
 
         this.probabilitiesPerStatement = new HashMap<>();
-        double statementProbability = 0.0;
-        Map<Integer, String> methodBodyText =
-                this.getTestMethodBodyText(test.getSourceCodeFile(), test);
-//        System.out.printf("[%s]****%n",test.getName());
+        double statementProbability;
+
+        final Map<Integer, String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(), test);
+
         for (Integer statementNum : test.getStatementLineNumbers()) {
-            String stmtString = getTextBodyToLine(methodBodyText, statementNum);
-            Instance instance = this.createSingleInstance(stmtString, 0, this.tokenizer);
+            final String stmtString = getTextBodyToLine(methodBodyText, statementNum);
+            final Instance instance = this.createSingleInstance(stmtString, 0, this.tokenizer);
             instance.setDataset(this.trainingInstances);
 
             statementProbability = this.model.classify(instance);
-//            this.logger.debug(String.format("[%s][statement:%d][p(statement): %f]%n",test.getName(),statementNum,statementProbability));
+
             this.probabilitiesPerStatement.put(statementNum, statementProbability);
+
             totalProbabilities += statementProbability;
         }
+
         double aggregateProbability = 0.0;
 
         for (Integer statementNum : test.getStatementLineNumbers()) {
@@ -170,7 +181,6 @@ public class VocabularyStrategy implements Strategy {
             aggregateProbability += statementPnormalized;
             this.probabilitiesPerStatement.put(statementNum, aggregateProbability);
         }
-
     }
 
     /**
@@ -198,13 +208,16 @@ public class VocabularyStrategy implements Strategy {
      * @return The resulting codeblock
      */
     public String getTextBodyToLine(Map<Integer, String> methodBodyText, int lineNumber) {
-        StringBuilder sb = new StringBuilder();
-        for (Integer ln : methodBodyText.keySet()) {
-            String text = methodBodyText.get(ln);
-            if (ln <= lineNumber) {
-                sb.append(text).append(" ");
+        final StringBuilder sb = new StringBuilder();
+
+        for (Integer currentLine : methodBodyText.keySet()) {
+            if(currentLine > lineNumber){
+                break;
             }
+
+            sb.append(methodBodyText.get(currentLine)).append(" ");
         }
+
         return sb.toString();
     }
 
@@ -216,26 +229,22 @@ public class VocabularyStrategy implements Strategy {
      * @return The mapping between the lineNumber and the corresponding sourceText
      * @throws IOException thrown if the test file could not be read
      */
-    public Map<Integer, String> getTestMethodBodyText(File f, TestMethod method)
-            throws IOException {
-        Map<Integer, String> resultBody = new HashMap<>();
-        BufferedReader br = new BufferedReader(new FileReader(f));
-        List<String> sb = br.lines().collect(Collectors.toList());
-        LineNumberAttribute ainfo = (LineNumberAttribute) method.getCtMethod().getMethodInfo()
-                .getCodeAttribute().getAttribute(LineNumberAttribute.tag);
+    public Map<Integer, String> getTestMethodBodyText(File f, TestMethod method) throws IOException {
+        final Map<Integer, String> resultBody = new HashMap<>();
+        final BufferedReader br = new BufferedReader(new FileReader(f));
+        final List<String> sb = br.lines().collect(Collectors.toList());
+        final LineNumberAttribute ainfo = (LineNumberAttribute) method.getCtMethod()
+                .getMethodInfo()
+                .getCodeAttribute()
+                .getAttribute(LineNumberAttribute.tag);
 
-        for (ControlFlow.Block b : method.getControlFlow().basicBlocks()) {
-
+        for (ControlFlow.Block b : method.getBlocks()) {
             int length = b.length();//The ByteCode size of the Basic block
-            int pos =
-                    b.position(); //The position of the first byteCode instruction of the basic block
-            int startLineNumber =
-                    ainfo.toLineNumber(pos); //The corresponding line number in the source code
-            int endLineNumber =
-                    ainfo.toLineNumber(pos + length); //The First line of the next BasicBlock
+            int pos = b.position(); //The position of the first byteCode instruction of the basic block
+            int startLineNumber = ainfo.toLineNumber(pos); //The corresponding line number in the source code
+            int endLineNumber = ainfo.toLineNumber(pos + length); //The First line of the next BasicBlock
 
-            StringBuilder stringBuilder = new StringBuilder();
-//            logger.info(String.format("[%s][%d/%d][START:%d (%d)][END:%d (%d)][length: %d]%n",method.getName(),b.position(),startLineNumber,method.getControlFlow().basicBlocks().length,b.position(),b.position()+b.length(),endLineNumber,b.length()));
+            final StringBuilder stringBuilder = new StringBuilder();
             for (int ln = startLineNumber; ln <= endLineNumber; ln++) {
                 stringBuilder.append(sb.get(ln - 1));
             }
@@ -254,9 +263,8 @@ public class VocabularyStrategy implements Strategy {
      * @param labelTrain        The label of each training sample
      * @return The Training instances
      */
-    private Instances createInstances(KerasTokenizer tokenizer, int numTrainInstances,
-                                      String[] featureTrain, List<Integer> labelTrain) {
-        Instances trainInstances = createEmptyInstances(tokenizer, numTrainInstances);
+    private Instances createInstances(KerasTokenizer tokenizer, int numTrainInstances, String[] featureTrain, List<Integer> labelTrain) {
+        final Instances trainInstances = createEmptyInstances(tokenizer, numTrainInstances);
 
         for (int i = 0; i < numTrainInstances; i++) {
             Instance instance = createSingleInstance(featureTrain[i], labelTrain.get(i), tokenizer);
@@ -275,20 +283,19 @@ public class VocabularyStrategy implements Strategy {
      * @param tokenizer  The kerasTokenizer from which the feature vector is extracted
      * @return The weka instance
      */
-    private Instance createSingleInstance(String methodBody, double label,
-                                          KerasTokenizer tokenizer) {
+    private Instance createSingleInstance(String methodBody, double label, KerasTokenizer tokenizer) {
         String[] str = new String[1];
         str[0] = methodBody;
         double[] featureVector = tokenizer.textsToMatrix(str, TokenizerMode.COUNT).toDoubleVector();
         featureVector = Arrays.copyOf(featureVector, featureVector.length + 1);
         featureVector[featureVector.length - 1] = label;
-        SparseInstance sparseInstance = new SparseInstance(1.0, featureVector);
-        return sparseInstance;
+
+        return new SparseInstance(1.0, featureVector);
     }
 
-
     /**
-     * Method to initialize the weka Instances. This method creates the attributes corresponding to each token extracted from the tokenizer and attach the attributes to the empty weka Instances
+     * Method to initialize the weka Instances. This method creates the attributes corresponding to each token extracted
+     * from the tokenizer and attach the attributes to the empty weka Instances
      *
      * @param tokenizer         Tokenizer fitted on training data
      * @param numTrainInstances Number on training samples
@@ -299,16 +306,17 @@ public class VocabularyStrategy implements Strategy {
 
         Attribute labelAttribute = new Attribute("label_flakime___");
 
-        ArrayList<Attribute> featuresList =
-                (ArrayList<Attribute>) stringIndexes.values().stream().map(Attribute::new)
-                        .collect(Collectors.toList());
+        ArrayList<Attribute> featuresList = (ArrayList<Attribute>) stringIndexes.values().stream()
+                .map(Attribute::new)
+                .collect(Collectors.toList());
+
         featuresList.add(labelAttribute);
+
         Instances trainInstances = new Instances("trainData", featuresList, numTrainInstances);
         trainInstances.setClass(labelAttribute);
 
         return trainInstances;
     }
-
 
     /**
      * Method to create and fit a {@code KerasTokenizer}
@@ -317,8 +325,7 @@ public class VocabularyStrategy implements Strategy {
      * @param additonalVocabulary The additional testmehtod bodies
      * @return The fitted kerasTokenizer
      */
-    private KerasTokenizer createTokenizer(String[] trainingVocabulary,
-                                           String[] additonalVocabulary) {
+    private KerasTokenizer createTokenizer(String[] trainingVocabulary, String[] additonalVocabulary) {
         String[] concat = ArrayUtils.addAll(trainingVocabulary, additonalVocabulary);
         KerasTokenizer tokenizer = new KerasTokenizer();
         tokenizer.fitOnTexts(concat);

@@ -1,8 +1,7 @@
-package lu.uni.serval.instrumentation.strategies;
+package lu.uni.serval.flakime.core.instrumentation.strategies;
 
-import javafx.util.Pair;
-import lu.uni.serval.data.Project;
-import lu.uni.serval.data.TestMethod;
+import lu.uni.serval.flakime.core.data.Project;
+import lu.uni.serval.flakime.core.data.TestMethod;
 
 /**
  * The strategy interface allows the user to implement different flakiness probability calculation process.

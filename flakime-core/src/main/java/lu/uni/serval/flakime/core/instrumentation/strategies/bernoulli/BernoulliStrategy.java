@@ -1,10 +1,9 @@
-package lu.uni.serval.instrumentation.strategies.bernoulli;
+package lu.uni.serval.flakime.core.instrumentation.strategies.bernoulli;
 
-import lu.uni.serval.data.Project;
-import lu.uni.serval.data.TestMethod;
-import lu.uni.serval.instrumentation.strategies.Strategy;
-import org.apache.maven.plugin.logging.Log;
-
+import lu.uni.serval.flakime.core.data.Project;
+import lu.uni.serval.flakime.core.data.TestMethod;
+import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
+import lu.uni.serval.flakime.core.utils.Logger;
 
 /**
  * Strategy implementation that follows bernoulli distribution.
@@ -20,14 +19,12 @@ import org.apache.maven.plugin.logging.Log;
  * The statement flakiness probability is given by P(stmt) = 1 - (1-p)^#executedStmts
  */
 public class BernoulliStrategy implements Strategy {
-
-    private final Log logger;
+    private final Logger logger;
     private double flakinessProbability;
 
-    public BernoulliStrategy(Log logger) {
+    public BernoulliStrategy(Logger logger) {
         this.logger = logger;
     }
-
 
     @Override
     public void preProcess(Project p) {
@@ -39,10 +36,9 @@ public class BernoulliStrategy implements Strategy {
         double testProbability = getTestFlakinessProbability(test);
         double statementProbability = getStatementFlakinessProbability(test, lineNumber);
         double normalizedProbability = statementProbability / testProbability;
-        String result = String.format("%f", normalizedProbability);
-        return result;
-    }
 
+        return String.format("%f", normalizedProbability);
+    }
 
     @Override
     public double getTestFlakinessProbability(TestMethod test) {
@@ -52,12 +48,12 @@ public class BernoulliStrategy implements Strategy {
     }
 
     @Override
-    public double getStatementFlakinessProbability(TestMethod test,
-                                                   int lineNumber) {
+    public double getStatementFlakinessProbability(TestMethod test, int lineNumber) {
         int numberOfStatementExecuted = 1 + test.getStatementLineNumbers()
                 .stream()
                 .filter(line -> line < lineNumber)
                 .toArray().length;
+
         double probabilityOfNotFlaking = 1 - this.flakinessProbability;
         return 1 - Math.pow(probabilityOfNotFlaking, numberOfStatementExecuted);
     }

@@ -1,10 +1,11 @@
-package lu.uni.serval.data;
+package lu.uni.serval.flakime.core.data;
 
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.bytecode.BadBytecode;
 import javassist.bytecode.analysis.ControlFlow;
+import lu.uni.serval.flakime.core.utils.Logger;
 
 import java.io.File;
 import java.util.Arrays;
@@ -15,30 +16,32 @@ import java.util.stream.Collectors;
  * This class represent a Test method holding all information about the targeted (test) method to be transformed
  */
 public class TestMethod {
-    public CtMethod getCtMethod() {
-        return ctMethod;
-    }
-
+    private final Logger logger;
     private final CtMethod ctMethod;
     private final ControlFlow controlFlow;
     private final File sourceCodeFile;
 
-    public ControlFlow getControlFlow() {
-        return controlFlow;
+    public ControlFlow.Block[] getBlocks() {
+        return controlFlow.basicBlocks();
     }
 
     /**
      * TestMethod constructor
      *
+     * @param logger Reference to logger
      * @param ctMethod Instance of javassist {@code CtMethod.class}
      * @param sourceCode Instance of {@code File.class} pointing the method source files
      * @throws BadBytecode Thrown if the bytecode is malformed
      */
-    public TestMethod(CtMethod ctMethod, File sourceCode) throws BadBytecode {
+    public TestMethod(Logger logger, CtMethod ctMethod, File sourceCode) throws BadBytecode {
+        this.logger = logger;
         this.ctMethod = ctMethod;
         this.sourceCodeFile = sourceCode;
         this.controlFlow = new ControlFlow(this.ctMethod);
+    }
 
+    public CtMethod getCtMethod() {
+        return ctMethod;
     }
 
     /**
@@ -62,13 +65,23 @@ public class TestMethod {
      */
     public void addLocalVariable(String variableName,CtClass type) throws CannotCompileException {
         this.ctMethod.addLocalVariable(variableName, type);
+        logger.debug(String.format("Inserted local variable '%s' to method %s",
+                variableName,
+                this.ctMethod.getLongName()
+        ));
     }
     public void insertBefore(String payload){
         try {
             this.ctMethod.insertBefore(payload);
+            logger.debug(String.format("Inserted '%s' at beginning of method %s",
+                    payload,
+                    this.ctMethod.getLongName()
+            ));
         } catch (CannotCompileException e) {
-
-            e.printStackTrace();
+            logger.error(String.format("Failed to insert payload before method '%s': %s",
+                    this.ctMethod.getLongName(),
+                    e.getMessage()
+            ));
         }
     }
     /**
@@ -78,13 +91,18 @@ public class TestMethod {
      *  if the Compilation of source code fails
      */
     public void insertAt(int lineNumber, String payload) {
-
-        try { ;
-            int line = this.ctMethod.insertAt(lineNumber, payload);
+        try {
+            this.ctMethod.insertAt(lineNumber, payload);
+            logger.debug(String.format("Inserted payload at line %s in method %s",
+                    lineNumber,
+                    this.ctMethod.getLongName()
+            ));
         } catch (CannotCompileException e) {
-            int maxStack = this.ctMethod.getMethodInfo().getCodeAttribute().getMaxStack();
-            System.err.printf("%s line:%d %n",this.getName(),lineNumber);
-            e.printStackTrace();
+            logger.error(String.format("Failed to insert payload at line %d in method '%s': %s",
+                    lineNumber,
+                    this.ctMethod.getLongName(),
+                    e.getMessage()
+            ));
         }
     }
 

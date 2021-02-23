@@ -1,4 +1,4 @@
-package lu.uni.serval.data;
+package lu.uni.serval.flakime.core.data;
 
 public class TestStatement {
     private int sourceLineNumberStart;
@@ -11,6 +11,4 @@ public class TestStatement {
         this.getSourceLineNumberEnd = getSourceLineNumberEnd;
         this.owningMethod = owningMethod;
     }
-
-
 }

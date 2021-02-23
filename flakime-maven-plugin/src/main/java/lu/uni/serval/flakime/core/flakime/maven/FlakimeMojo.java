@@ -1,16 +1,17 @@
-package lu.uni.serval;
+package lu.uni.serval.flakime.core.flakime.maven;
 
 import java.io.File;
 import java.util.Properties;
 import java.util.Set;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
-import lu.uni.serval.data.Project;
-import lu.uni.serval.data.TestClass;
-import lu.uni.serval.data.TestMethod;
-import lu.uni.serval.instrumentation.FlakimeInstrumenter;
-import lu.uni.serval.instrumentation.strategies.Strategy;
-import lu.uni.serval.instrumentation.strategies.StrategyFactory;
+import lu.uni.serval.flakime.core.data.Project;
+import lu.uni.serval.flakime.core.data.TestClass;
+import lu.uni.serval.flakime.core.data.TestMethod;
+import lu.uni.serval.flakime.core.instrumentation.FlakimeInstrumenter;
+import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
+import lu.uni.serval.flakime.core.instrumentation.strategies.StrategyFactory;
+import lu.uni.serval.flakime.core.flakime.maven.utils.MavenLogger;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -20,8 +21,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-
-
 
 @Mojo(name = "flakime-injector",
         defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,
@@ -46,7 +45,7 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "/src/test/java", property = "flakime.testSourceDirectory")
     private String testSourceDirectory;
 
-    @Parameter(required = false)
+    @Parameter
     private Properties strategyParameters;
 
     /**
@@ -65,19 +64,16 @@ public class FlakimeMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         Strategy strategyImpl = null;
         Log logger = getLog();
+
         try {
-            final Project project = initializeProject(mavenProject);
-            strategyImpl = StrategyFactory
-                    .fromName(strategy, strategyParameters, logger);
+            final MavenLogger mavenLogger = new MavenLogger(logger);
+            final Project project = initializeProject(mavenProject, mavenLogger);
+            strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
 
-            logger.info(String.format("Strategy %s loaded",
-                    strategyImpl.getClass().getName()));
+            logger.info(String.format("Strategy %s loaded", strategyImpl.getClass().getName()));
             logger.info(String.format("FlakeRate: %f", flakeRate));
-            logger.info(String.format("Found %d classes",
-                    project.getNumberClasses()));
-
-            logger.debug("Running preProcess of " +
-                    strategyImpl.getClass().getSimpleName());
+            logger.info(String.format("Found %d classes", project.getNumberClasses()));
+            logger.debug(String.format("Running preProcess of %s", strategyImpl.getClass().getSimpleName()));
 
             strategyImpl.preProcess(project);
 
@@ -91,12 +87,10 @@ public class FlakimeMojo extends AbstractMojo {
                             testMethod.getName()));
 
                     try {
-                        double probability = strategyImpl
-                                .getTestFlakinessProbability(testMethod);
+                        double probability = strategyImpl.getTestFlakinessProbability(testMethod);
 //                        getLog().info(String.format("Probability of %s: %f",testMethod.getName(),probability));
                         if (probability > (1 - flakeRate)) {
-                            FlakimeInstrumenter
-                                    .instrument(testMethod, strategyImpl);
+                            FlakimeInstrumenter.instrument(testMethod, strategyImpl);
                         }
                     } catch (CannotCompileException e) {
                         logger.warn(String.format(
@@ -121,13 +115,15 @@ public class FlakimeMojo extends AbstractMojo {
      * This method parse the {@code Maven project} into a {@code Project}
      *
      * @param mavenProject The target maven project containing the tests.
+     * @param mavenLogger Reference to logger
      * @return The instantiated project
      * @throws NotFoundException Thrown if the directories contains only jars or do not exist.
      * @throws DependencyResolutionRequiredException Thrown if an artifact is used but not resolved
      */
-    public Project initializeProject(MavenProject mavenProject)
+    public Project initializeProject(MavenProject mavenProject, MavenLogger mavenLogger)
             throws NotFoundException, DependencyResolutionRequiredException {
         return new Project(
+                mavenLogger,
                 testAnnotations,
                 getDirectory(testClassDirectory),
                 getDirectory(testSourceDirectory),

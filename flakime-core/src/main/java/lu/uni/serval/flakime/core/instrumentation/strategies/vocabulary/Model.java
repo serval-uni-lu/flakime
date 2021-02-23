@@ -1,23 +1,19 @@
-package lu.uni.serval.instrumentation.strategies.vocabulary;
+package lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary;
 
-import java.io.InputStream;
-import org.apache.maven.plugin.logging.Log;
+import lu.uni.serval.flakime.core.utils.Logger;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
-
 
 /**
  * Representation of an ml model. It holds the classifier object and the method allowing to (de)-serialize
  * the classifier as well as training.
  */
 public class Model {
-
     private final RandomForest randomForest;
-    private final Log logger;
+    private final Logger logger;
     private boolean trainNeededFlag = true;
-
 
     /**
      * Constructs a model based on a pre-trained RandomForest
@@ -26,16 +22,12 @@ public class Model {
      * @param modelPath The path to the pre-trained RandomForest
      * @throws Exception Thrown if the model can not be deserialized.
      */
-    public Model(Log logger, String modelPath) throws Exception {
-        RandomForest randomForest1;
+    public Model(Logger logger, String modelPath) throws Exception {
         this.logger = logger;
-        InputStream inputStream = null;
-
-
-        randomForest1 = this.load(modelPath);
-        this.logger.info("Successfully loader model");
-        this.randomForest = randomForest1;
         this.trainNeededFlag = false;
+        this.randomForest = this.load(modelPath);
+        
+        this.logger.info("Successfully loader model");
     }
 
     /**
@@ -45,38 +37,13 @@ public class Model {
      * @param nTrees   The number of trees for the Random forest.
      * @param nThreads The number of threads used for the training.
      */
-    public Model(Log logger, int nTrees, int nThreads) {
+    public Model(Logger logger, int nTrees, int nThreads) {
         this.logger = logger;
-        RandomForest forest = new RandomForest();
-        forest.setNumIterations(nTrees);
-        forest.setSeed(0);
-        forest.setDebug(true);
-        forest.setNumExecutionSlots(nThreads);
-        this.randomForest = forest;
-    }
-
-    /**
-     * Non parameterized constructor that builds a RandomForest from scratch with default parameters
-     * Number of trees : 100
-     * random_state : 0
-     * number of threads for training : 12
-     *
-     * @param logger The logger attached to the running instance.
-     */
-    public Model(Log logger) {
-        this.logger = logger;
-        int nbtrees = 100;
-        int random_state = 0;
-        int numberOfThreads = 12;
-
-        RandomForest forest = new RandomForest();
-        forest.setNumIterations(nbtrees);
-        forest.setSeed(random_state);
-        forest.setDebug(true);
-        forest.setNumExecutionSlots(numberOfThreads);
-
-        this.randomForest = forest;
-
+        this.randomForest = new RandomForest();
+        this.randomForest.setNumIterations(nTrees);
+        this.randomForest.setSeed(0);
+        this.randomForest.setDebug(true);
+        this.randomForest.setNumExecutionSlots(nThreads);
     }
 
     /**
@@ -86,15 +53,13 @@ public class Model {
      * @throws Exception Thrown by classifier build
      */
     public void trainModel(Instances trainingInstances) throws Exception {
-
-        float startTime = System.nanoTime();
+        long startTime = System.nanoTime();
         this.randomForest.buildClassifier(trainingInstances);
         this.trainNeededFlag = false;
-        float endTime = System.nanoTime();
+        long endTime = System.nanoTime();
 
-        this.logger.info(String
-                .format("%nRFC took %.1f seconds to train%n", (endTime - startTime) / 1000000000));
-
+        System.out.println();
+        this.logger.info(String.format("RFC took %.1f seconds to train%n", (float)(endTime - startTime) / 1000000000));
     }
 
     /**

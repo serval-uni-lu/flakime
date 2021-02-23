@@ -1,4 +1,4 @@
-package lu.uni.serval.instrumentation.strategies.vocabulary;
+package lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TrainingData {
@@ -17,8 +16,7 @@ public class TrainingData {
     }
 
     private List<Entry> load(InputStream in) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(in, new TypeReference<List<Entry>>(){});
+        return new ObjectMapper().readValue(in, new TypeReference<List<Entry>>(){});
     }
 
     public List<Entry> getEntries() {
