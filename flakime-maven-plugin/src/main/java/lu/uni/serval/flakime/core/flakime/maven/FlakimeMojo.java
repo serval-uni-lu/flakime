@@ -78,24 +78,23 @@ public class FlakimeMojo extends AbstractMojo {
             strategyImpl.preProcess(project);
 
             for (TestClass testClass : project) {
-
-                logger.debug(
-                        String.format("Process class %s", testClass.getName()));
+                logger.debug(String.format("Process class %s", testClass.getName()));
 
                 for (TestMethod testMethod : testClass) {
-                    logger.debug(String.format("\tProcess method %s",
-                            testMethod.getName()));
+                    logger.debug(String.format("\tProcess method %s", testMethod.getName()));
 
                     try {
                         double probability = strategyImpl.getTestFlakinessProbability(testMethod);
-//                        getLog().info(String.format("Probability of %s: %f",testMethod.getName(),probability));
+                        logger.debug(String.format("Probability of %s: %f",testMethod.getName(),probability));
+
                         if (probability > (1 - flakeRate)) {
                             FlakimeInstrumenter.instrument(testMethod, strategyImpl);
                         }
                     } catch (CannotCompileException e) {
-                        logger.warn(String.format(
-                                "Failed to instrument method %s: %s",
-                                testMethod.getName(), e.getMessage()), e);
+                        logger.warn(String.format("Failed to instrument method %s: %s",
+                                testMethod.getName(),
+                                e.getMessage()
+                        ));
                     }
                 }
 

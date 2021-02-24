@@ -32,12 +32,11 @@ public class BernoulliStrategy implements Strategy {
     }
 
     @Override
-    public String getProbabilityFunction(TestMethod test, int lineNumber) {
+    public double getTestFlakinessProbability(TestMethod test, int lineNumber) {
         double testProbability = getTestFlakinessProbability(test);
         double statementProbability = getStatementFlakinessProbability(test, lineNumber);
-        double normalizedProbability = statementProbability / testProbability;
 
-        return String.format("%f", normalizedProbability);
+        return statementProbability / testProbability;
     }
 
     @Override
@@ -47,8 +46,13 @@ public class BernoulliStrategy implements Strategy {
         return 1 - Math.pow(probabilityOfNotFlaking, numberOfStatement);
     }
 
+
     @Override
-    public double getStatementFlakinessProbability(TestMethod test, int lineNumber) {
+    public void postProcess() {
+
+    }
+
+    private double getStatementFlakinessProbability(TestMethod test, int lineNumber) {
         int numberOfStatementExecuted = 1 + test.getStatementLineNumbers()
                 .stream()
                 .filter(line -> line < lineNumber)
@@ -56,10 +60,5 @@ public class BernoulliStrategy implements Strategy {
 
         double probabilityOfNotFlaking = 1 - this.flakinessProbability;
         return 1 - Math.pow(probabilityOfNotFlaking, numberOfStatementExecuted);
-    }
-
-    @Override
-    public void postProcess() {
-
     }
 }

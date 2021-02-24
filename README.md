@@ -23,7 +23,7 @@ An environment variable should also be set for the instrumentation to be execute
 
 
 #### Common configuration :
-| tag                  | type & range                   | default   | required | description                                                                    |
+| tag                  | implementation & range                   | default   | required | description                                                                    |
 |----------------------|--------------------------------|-----------|----------|--------------------------------------------------------------------------------|
 | `flakeRate`          | float: 0..1                    | 0.05      |          | The threshold at which to consider a test with non-null probability to flake   |
 | `strategy`           | string: {vocabulary,bernoulli} | bernoulli |          | The strategy with which the flakiness probability of a test will be calculated |
@@ -31,7 +31,7 @@ An environment variable should also be set for the instrumentation to be execute
 | `strategyParameters` | Array of key-value property    | none      |          | The parameters specific to each strategy implementation (see desc. bellow)     |
 
 #### Vocabulary strategy parameters :
-| key                   | value type & range | default                                            | required                            | description                                                                                               |
+| key                   | value implementation & range | default                                            | required                            | description                                                                                               |
 |-----------------------|--------------------|----------------------------------------------------|-------------------------------------|-----------------------------------------------------------------------------------------------------------|
 | `trainModel`          | boolean            | true                                               |                                     | Should the model be trained ?                                                                           |
 | `modelPath`           | string             |                                                    | X (if `trainModel` is set to false) | The path to the pre-trained serialized model                                                              |

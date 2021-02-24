@@ -10,7 +10,6 @@ import lu.uni.serval.flakime.core.data.TestMethod;
  * its corresponding {@code lineNumber}.
  */
 public interface Strategy {
-
     /**
      * Method used to initialize the probability calculation strategy.
      *
@@ -19,16 +18,14 @@ public interface Strategy {
      */
     void preProcess(Project p) throws Exception;
 
-
     /**
-     * Method that returns the flakiness probability parsed as a string of a statement identified by the test method and the line number.
+     * Method that computes the flakiness probability of a particular statement identified by the enclosing test method and the statement line number.
      *
-     * @param test The targeted test method
-     * @param lineNumber The statement line Number
-     * @return the parsed probability string.
+     * @param test The enclosing test method
+     * @param lineNumber The statement line number
+     * @return The double value representing the probability of the statement being flaky.
      */
-    String getProbabilityFunction(TestMethod test, int lineNumber);
-
+    double getTestFlakinessProbability(TestMethod test, int lineNumber);
 
     /**
      * Method that computes the overall test flakiness probability.
@@ -38,13 +35,5 @@ public interface Strategy {
      */
     double getTestFlakinessProbability(TestMethod test);
 
-    /**
-     * Method that computes the flakiness probability of a particular statement identified by the enclosing test method and the statement line number.
-     *
-     * @param test The enclosing test method
-     * @param lineNumber The statement line number
-     * @return The double value representing the probability of the statement being flaky.
-     */
-    double getStatementFlakinessProbability(TestMethod test,int lineNumber);
     void postProcess();
 }

@@ -43,10 +43,10 @@ public class FlakimeInstrumenter {
      */
     private static String computePayload(TestMethod testMethod, Strategy strategy, int lineNumber) {
         final StringBuilder result = new StringBuilder();
-        final String probability = strategy.getProbabilityFunction(testMethod, lineNumber);
+        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
 
         //TODO Add environment var check to the inserted string
-        if (Double.parseDouble(probability) > 0) {
+        if (probability > 0) {
             result.append("if( !")
                     .append(flakimeDisableFlag)
                     .append(" && (")

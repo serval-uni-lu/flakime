@@ -25,15 +25,15 @@ public class TrainingData {
 
     static class Entry{
         @JsonProperty(value = "Body")
-        String body;
+        private String body;
         @JsonProperty(value = "ClassName")
-        String className;
+        private String className;
         @JsonProperty(value = "MethodName")
-        String methodName;
+        private String methodName;
         @JsonProperty(value = "ProjectName")
-        String projectName;
+        private String projectName;
         @JsonProperty(value = "Label")
-        int label;
+        private int label;
 
         public String getBody() {
             return body;

@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,25 +19,16 @@ import lu.uni.serval.flakime.core.data.TestClass;
 import lu.uni.serval.flakime.core.data.TestMethod;
 import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
 import lu.uni.serval.flakime.core.utils.Logger;
-import org.apache.commons.lang3.ArrayUtils;
-import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.KerasTokenizer;
-import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;
-import weka.core.Attribute;
-import weka.core.Instance;
-import weka.core.Instances;
-import weka.core.SparseInstance;
-
 
 public class VocabularyStrategy implements Strategy {
     private final Logger logger;
     private int nTrees;
     private int nThreads;
     private Model model;
-    private KerasTokenizer tokenizer;
-    private Instances trainingInstances;
     private String pathToModel;
     private boolean trainModel;
     private Map<Integer, Double> probabilitiesPerStatement;
+    private final Model.Implementation modelImplementation = Model.Implementation.STANDFORD;
 
     public VocabularyStrategy(Logger logger) {
         this.logger = logger;
@@ -48,51 +37,30 @@ public class VocabularyStrategy implements Strategy {
     /**
      * Vocabulary strategy preProcess entry point that will trigger either the building of the Random forest model or loading from file system.
      *
-     * @param p The project to run the Strategy on
+     * @param project The project to run the Strategy on
      * @throws Exception Thrown if buildModel failed
      */
     @Override
-    public void preProcess(final Project p) throws Exception {
-        final InputStream dataSource = VocabularyStrategy.class.getClassLoader().getResourceAsStream("data/vocabulary.json");
-        final TrainingData trainingData = new TrainingData(dataSource);
-        final Set<String> additionalTrainingText = new HashSet<>();
-
-        for (TestClass testClass : p) {
-            for (TestMethod testMethod : testClass) {
-                final File f = testMethod.getSourceCodeFile();
-                additionalTrainingText.addAll(this.getTestMethodBodyText(f, testMethod).values());
-            }
-        }
-
-        final List<Integer> yTrain = trainingData.getEntries().stream()
-                .map(entry -> entry.label)
-                .collect(Collectors.toList());
-
-        final String[] dataTrain = trainingData.getEntries().stream()
-                .map(entry -> entry.body)
-                .toArray(String[]::new);
-
-        final String[] additionalTrain = additionalTrainingText.toArray(new String[0]);
-
-        this.tokenizer = this.createTokenizer(dataTrain, additionalTrain);
-        this.trainingInstances = this.createInstances(tokenizer, yTrain.size(), dataTrain, yTrain);
-
+    public void preProcess(final Project project) throws Exception {
         if (trainModel) {
-            this.model = new Model(this.logger, this.nTrees, this.nThreads);
+            final InputStream dataSource = VocabularyStrategy.class.getClassLoader().getResourceAsStream("data/vocabulary.json");
+            final TrainingData trainingData = new TrainingData(dataSource);
+            final Set<String> additionalTrainingText = new HashSet<>();
 
-            this.logger.info(String.format("Training Random forest Classifier on %d threads with %d trees",
-                    this.nThreads,
-                    this.nTrees
-            ));
+            for (TestClass testClass : project) {
+                for (TestMethod testMethod : testClass) {
+                    final File f = testMethod.getSourceCodeFile();
+                    additionalTrainingText.addAll(this.getTestMethodBodyText(f, testMethod).values());
+                }
+            }
 
-            this.model.trainModel(this.trainingInstances);
-            String modelPath = "rfc_classifier";
-            this.model.save(modelPath);
-            logger.info(String.format("Model saved under [%s]", modelPath));
-
+            this.model = ModelFactory.create(this.modelImplementation, this.logger, this.nTrees, this.nThreads);
+            this.model.setData(trainingData, additionalTrainingText);
+            this.model.train();
+            this.model.save(this.pathToModel);
         } else {
             try{
-                this.model = new Model(this.logger, this.pathToModel);
+                this.model = ModelFactory.load(this.modelImplementation, this.logger, this.pathToModel);
             }catch (StackOverflowError e){
                 logger.error(String.format("Error occurred when training vocabulary model: [%s] %s",
                         e.getClass().getSimpleName(),
@@ -110,10 +78,9 @@ public class VocabularyStrategy implements Strategy {
      * @return Return the probability of the codeBlock to be flaky
      */
     @Override
-    public String getProbabilityFunction(TestMethod test, int lineNumber) {
-        return String.valueOf(this.getStatementFlakinessProbability(test, lineNumber));
+    public double getTestFlakinessProbability(TestMethod test, int lineNumber) {
+        return Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0);
     }
-
 
     /**
      * Computes the overall test flakiness probability.
@@ -131,9 +98,7 @@ public class VocabularyStrategy implements Strategy {
                     .reduce((a, b) -> a + " " + b)
                     .orElseThrow(() -> new IllegalStateException(String.format("Method body of %s is empty", test.getName())));
 
-            final Instance bodyInstance = this.createSingleInstance(completeBody, 0, this.tokenizer);
-            bodyInstance.setDataset(this.trainingInstances);
-            testFlakinessProbability = this.model.classify(bodyInstance);
+            testFlakinessProbability = this.model.computeProbability(completeBody);
             computeStatementProbability(test);
         } catch (Exception e) {
             this.logger.error(String.format("Failed to compute test probability, default to 0.0 for test '%s': %s",
@@ -162,11 +127,8 @@ public class VocabularyStrategy implements Strategy {
         final Map<Integer, String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(), test);
 
         for (Integer statementNum : test.getStatementLineNumbers()) {
-            final String stmtString = getTextBodyToLine(methodBodyText, statementNum);
-            final Instance instance = this.createSingleInstance(stmtString, 0, this.tokenizer);
-            instance.setDataset(this.trainingInstances);
-
-            statementProbability = this.model.classify(instance);
+            final String bodyToLine = getTextBodyToLine(methodBodyText, statementNum);
+            statementProbability = this.model.computeProbability(bodyToLine);
 
             this.probabilitiesPerStatement.put(statementNum, statementProbability);
 
@@ -181,18 +143,6 @@ public class VocabularyStrategy implements Strategy {
             aggregateProbability += statementPnormalized;
             this.probabilitiesPerStatement.put(statementNum, aggregateProbability);
         }
-    }
-
-    /**
-     * Returns the aggregated flakiness probability corresponding to the codeblock from start to {@code lineNumber}
-     *
-     * @param test       Not used
-     * @param lineNumber The ending line of the code block to get the probability
-     * @return The aggregated flakiness probability
-     */
-    @Override
-    public double getStatementFlakinessProbability(TestMethod test, int lineNumber) {
-        return Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0);
     }
 
     @Override
@@ -252,84 +202,6 @@ public class VocabularyStrategy implements Strategy {
         }
 
         return resultBody;
-    }
-
-    /**
-     * Method to create a not empty weka Instances object
-     *
-     * @param tokenizer         The fitted kerasTokenizer from which the feature vector are extracted
-     * @param numTrainInstances The size of the training set
-     * @param featureTrain      The body of each test method
-     * @param labelTrain        The label of each training sample
-     * @return The Training instances
-     */
-    private Instances createInstances(KerasTokenizer tokenizer, int numTrainInstances, String[] featureTrain, List<Integer> labelTrain) {
-        final Instances trainInstances = createEmptyInstances(tokenizer, numTrainInstances);
-
-        for (int i = 0; i < numTrainInstances; i++) {
-            Instance instance = createSingleInstance(featureTrain[i], labelTrain.get(i), tokenizer);
-            instance.setDataset(trainInstances);
-            trainInstances.add(instance);
-        }
-
-        return trainInstances;
-    }
-
-    /**
-     * Method to create a weka Instance.
-     *
-     * @param methodBody The test method body
-     * @param label      The test label value
-     * @param tokenizer  The kerasTokenizer from which the feature vector is extracted
-     * @return The weka instance
-     */
-    private Instance createSingleInstance(String methodBody, double label, KerasTokenizer tokenizer) {
-        String[] str = new String[1];
-        str[0] = methodBody;
-        double[] featureVector = tokenizer.textsToMatrix(str, TokenizerMode.COUNT).toDoubleVector();
-        featureVector = Arrays.copyOf(featureVector, featureVector.length + 1);
-        featureVector[featureVector.length - 1] = label;
-
-        return new SparseInstance(1.0, featureVector);
-    }
-
-    /**
-     * Method to initialize the weka Instances. This method creates the attributes corresponding to each token extracted
-     * from the tokenizer and attach the attributes to the empty weka Instances
-     *
-     * @param tokenizer         Tokenizer fitted on training data
-     * @param numTrainInstances Number on training samples
-     * @return Empty initialized instances object
-     */
-    private Instances createEmptyInstances(KerasTokenizer tokenizer, int numTrainInstances) {
-        Map<Integer, String> stringIndexes = tokenizer.getIndexWord();
-
-        Attribute labelAttribute = new Attribute("label_flakime___");
-
-        ArrayList<Attribute> featuresList = (ArrayList<Attribute>) stringIndexes.values().stream()
-                .map(Attribute::new)
-                .collect(Collectors.toList());
-
-        featuresList.add(labelAttribute);
-
-        Instances trainInstances = new Instances("trainData", featuresList, numTrainInstances);
-        trainInstances.setClass(labelAttribute);
-
-        return trainInstances;
-    }
-
-    /**
-     * Method to create and fit a {@code KerasTokenizer}
-     *
-     * @param trainingVocabulary  The training testmethod bodies
-     * @param additonalVocabulary The additional testmehtod bodies
-     * @return The fitted kerasTokenizer
-     */
-    private KerasTokenizer createTokenizer(String[] trainingVocabulary, String[] additonalVocabulary) {
-        String[] concat = ArrayUtils.addAll(trainingVocabulary, additonalVocabulary);
-        KerasTokenizer tokenizer = new KerasTokenizer();
-        tokenizer.fitOnTexts(concat);
-        return tokenizer;
     }
 
     public void setnTrees(int nTrees) {
