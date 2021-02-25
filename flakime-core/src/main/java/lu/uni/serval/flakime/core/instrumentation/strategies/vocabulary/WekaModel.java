@@ -52,9 +52,9 @@ public class WekaModel implements Model{
 
     @Override
     public void setData(TrainingData trainingData, Set<String> additionalTrainingText){
-        final List<Integer> yTrain = trainingData.getEntries().stream()
+        final Integer[] yTrain = trainingData.getEntries().stream()
                 .map(TrainingData.Entry::getLabel)
-                .collect(Collectors.toList());
+                .toArray(Integer[]::new);
 
         final String[] dataTrain = trainingData.getEntries().stream()
                 .map(TrainingData.Entry::getBody)
@@ -63,7 +63,7 @@ public class WekaModel implements Model{
         final String[] additionalTrain = additionalTrainingText.toArray(new String[0]);
 
         this.tokenizer = this.createTokenizer(dataTrain, additionalTrain);
-        this.trainingInstances = this.createInstances(tokenizer, yTrain.size(), dataTrain, yTrain);
+        this.trainingInstances = this.createInstances(tokenizer, yTrain.length, dataTrain, yTrain);
     }
 
     /**
@@ -74,8 +74,8 @@ public class WekaModel implements Model{
     @Override
     public void train() throws Exception {
         this.logger.info(String.format("Training Random Forest Classifier on %d threads with %d trees...",
-                this.randomForest.getNumIterations(),
-                this.randomForest.getNumExecutionSlots()
+                this.randomForest.getNumExecutionSlots(),
+                this.randomForest.getNumIterations()
         ));
 
         long startTime = System.nanoTime();
@@ -83,6 +83,7 @@ public class WekaModel implements Model{
         this.trainNeededFlag = false;
         long endTime = System.nanoTime();
 
+        System.out.println();
         this.logger.info(String.format("Random Forest Classifier trained in %.1f seconds",
                 (float)(endTime - startTime) / 1000000000
         ));
@@ -97,14 +98,14 @@ public class WekaModel implements Model{
      */
     @Override
     public double computeProbability(String body) throws Exception {
-        final Instance instance = this.createSingleInstance(body, 0, this.tokenizer);
-        instance.setDataset(this.trainingInstances);
-
         if (this.trainNeededFlag) {
             throw new IllegalStateException("The model is not fitted");
         }
 
-        return this.randomForest.classifyInstance(instance);
+        final Instance instance = this.createSingleInstance(this.trainingInstances, body, 0, this.tokenizer);
+        double[] dist = this.randomForest.distributionForInstance(instance);
+
+        return dist[1];
     }
 
     /**
@@ -141,34 +142,33 @@ public class WekaModel implements Model{
      * @param labelTrain        The label of each training sample
      * @return The Training instances
      */
-    private Instances createInstances(KerasTokenizer tokenizer, int numTrainInstances, String[] featureTrain, List<Integer> labelTrain) {
-        final Instances trainInstances = createEmptyInstances(tokenizer, numTrainInstances);
+    private Instances createInstances(KerasTokenizer tokenizer, int numTrainInstances, String[] featureTrain, Integer[] labelTrain) {
+        final Instances dataset = createEmptyInstances(tokenizer, numTrainInstances, labelTrain);
 
         for (int i = 0; i < numTrainInstances; i++) {
-            Instance instance = createSingleInstance(featureTrain[i], labelTrain.get(i), tokenizer);
-            instance.setDataset(trainInstances);
-            trainInstances.add(instance);
+            Instance instance = createSingleInstance(dataset, featureTrain[i], labelTrain[i], tokenizer);
+            dataset.add(instance);
         }
 
-        return trainInstances;
+        return dataset;
     }
 
     /**
      * Method to create a weka Instance.
      *
+     * @param dataset    Dataset
      * @param methodBody The test method body
      * @param label      The test label value
      * @param tokenizer  The kerasTokenizer from which the feature vector is extracted
      * @return The weka instance
      */
-    private Instance createSingleInstance(String methodBody, double label, KerasTokenizer tokenizer) {
-        String[] str = new String[1];
-        str[0] = methodBody;
-        double[] featureVector = tokenizer.textsToMatrix(str, TokenizerMode.COUNT).toDoubleVector();
-        featureVector = Arrays.copyOf(featureVector, featureVector.length + 1);
-        featureVector[featureVector.length - 1] = label;
+    private Instance createSingleInstance(Instances dataset, String methodBody, double label, KerasTokenizer tokenizer) {
+        double[] featureVector = tokenizer.textsToMatrix(new String[]{methodBody}, TokenizerMode.COUNT).toDoubleVector();
 
-        return new SparseInstance(1.0, featureVector);
+        Instance instance = new SparseInstance(1.0, ArrayUtils.insert(0, featureVector, label));
+        instance.setDataset(dataset);
+
+        return instance;
     }
 
     /**
@@ -179,19 +179,26 @@ public class WekaModel implements Model{
      * @param numTrainInstances Number on training samples
      * @return Empty initialized instances object
      */
-    private Instances createEmptyInstances(KerasTokenizer tokenizer, int numTrainInstances) {
+    private Instances createEmptyInstances(KerasTokenizer tokenizer, int numTrainInstances, Integer[] labels) {
         Map<Integer, String> stringIndexes = tokenizer.getIndexWord();
 
-        Attribute labelAttribute = new Attribute("label_flakime___");
+        final List<String> uniqueLabels = Arrays.stream(labels)
+                .distinct()
+                .sorted()
+                .map(String::valueOf)
+                .collect(Collectors.toList());
 
-        ArrayList<Attribute> featuresList = (ArrayList<Attribute>) stringIndexes.values().stream()
+        final Attribute labelAttribute = new Attribute("flakime_label", uniqueLabels);
+
+        final ArrayList<Attribute> featuresList = (ArrayList<Attribute>) stringIndexes.values().stream()
                 .map(Attribute::new)
                 .collect(Collectors.toList());
 
-        featuresList.add(labelAttribute);
+        featuresList.add(0, labelAttribute);
 
-        Instances trainInstances = new Instances("trainData", featuresList, numTrainInstances);
+        final Instances trainInstances = new Instances("trainData", featuresList, numTrainInstances);
         trainInstances.setClass(labelAttribute);
+        trainInstances.setClassIndex(0);
 
         return trainInstances;
     }

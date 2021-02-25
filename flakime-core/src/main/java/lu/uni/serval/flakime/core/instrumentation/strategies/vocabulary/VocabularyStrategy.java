@@ -28,7 +28,7 @@ public class VocabularyStrategy implements Strategy {
     private String pathToModel;
     private boolean trainModel;
     private Map<Integer, Double> probabilitiesPerStatement;
-    private final Model.Implementation modelImplementation = Model.Implementation.STANDFORD;
+    private final Model.Implementation modelImplementation = Model.Implementation.WEKA;
 
     public VocabularyStrategy(Logger logger) {
         this.logger = logger;
@@ -90,13 +90,19 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public double getTestFlakinessProbability(TestMethod test) {
+
         double testFlakinessProbability;
 
         try {
             final Map<Integer, String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(), test);
+
+            if(methodBodyText.isEmpty()){
+                return 0.0;
+            }
+
             final String completeBody = methodBodyText.values().stream()
                     .reduce((a, b) -> a + " " + b)
-                    .orElseThrow(() -> new IllegalStateException(String.format("Method body of %s is empty", test.getName())));
+                    .get();
 
             testFlakinessProbability = this.model.computeProbability(completeBody);
             computeStatementProbability(test);
