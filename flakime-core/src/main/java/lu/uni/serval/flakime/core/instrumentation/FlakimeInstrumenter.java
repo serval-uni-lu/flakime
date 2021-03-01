@@ -25,7 +25,7 @@ public class FlakimeInstrumenter {
         testMethod.insertBefore(String.format("%s = Math.random();", randomVariableName));
 
         testMethod.addLocalVariable(flakimeDisableFlag, CtClass.booleanType);
-        testMethod.insertBefore(String.format("%s = Boolean.parseBoolean(System.getenv(\"FLAKIME_DISABLE\"));", flakimeDisableFlag));
+//        testMethod.insertBefore(String.format("%s = Boolean.parseBoolean(System.getenv(\"FLAKIME_DISABLE\"));", flakimeDisableFlag));
 
         for (int lineNumber : testMethod.getStatementLineNumbers()) {
             final String payload = computePayload(testMethod, strategy, lineNumber);
@@ -48,7 +48,7 @@ public class FlakimeInstrumenter {
         //TODO Add environment var check to the inserted string
         if (probability > 0) {
             result.append("if( !")
-                    .append(flakimeDisableFlag)
+                    .append("Boolean.parseBoolean(System.getenv(\"FLAKIME_DISABLE\"))")
                     .append(" && (")
                     .append(randomVariableName)
                     .append("<")

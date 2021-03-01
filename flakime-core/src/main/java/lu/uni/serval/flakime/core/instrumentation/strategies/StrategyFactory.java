@@ -1,5 +1,6 @@
 package lu.uni.serval.flakime.core.instrumentation.strategies;
 
+import java.util.Optional;
 import lu.uni.serval.flakime.core.instrumentation.strategies.bernoulli.BernoulliStrategy;
 import lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary.VocabularyStrategy;
 import lu.uni.serval.flakime.core.utils.Logger;
@@ -31,12 +32,8 @@ public class StrategyFactory {
 
             String pathModel = "";
 
+            pathModel = Optional.ofNullable(properties.getProperty("modelPath")).orElse("rfc_classifier");
             if(!trainModel){
-                pathModel = properties.getProperty("modelPath");
-
-                if(pathModel == null ){
-                    throw new IllegalArgumentException("If trainModel set to false, modelPath must point to a valid model.");
-                }
 
                 if(!new File(pathModel).exists()){
                     throw new FileNotFoundException(String.format("Cannot find modelPath set at '%s'", pathModel));

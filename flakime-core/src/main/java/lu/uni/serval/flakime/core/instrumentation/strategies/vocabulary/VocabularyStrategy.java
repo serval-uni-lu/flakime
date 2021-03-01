@@ -42,7 +42,6 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public void preProcess(final Project project) throws Exception {
-        if (trainModel) {
             final InputStream dataSource = VocabularyStrategy.class.getClassLoader().getResourceAsStream("data/vocabulary.json");
             final TrainingData trainingData = new TrainingData(dataSource);
             final Set<String> additionalTrainingText = new HashSet<>();
@@ -54,19 +53,14 @@ public class VocabularyStrategy implements Strategy {
                 }
             }
 
+        if (trainModel) {
             this.model = ModelFactory.create(this.modelImplementation, this.logger, this.nTrees, this.nThreads);
             this.model.setData(trainingData, additionalTrainingText);
             this.model.train();
             this.model.save(this.pathToModel);
         } else {
-            try{
-                this.model = ModelFactory.load(this.modelImplementation, this.logger, this.pathToModel);
-            }catch (StackOverflowError e){
-                logger.error(String.format("Error occurred when training vocabulary model: [%s] %s",
-                        e.getClass().getSimpleName(),
-                        e.getMessage()
-                ));
-            }
+            this.model = ModelFactory.load(this.modelImplementation, this.logger, this.pathToModel);
+            this.model.setData(trainingData, additionalTrainingText);
         }
     }
 
@@ -79,7 +73,9 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public double getTestFlakinessProbability(TestMethod test, int lineNumber) {
-        return Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0);
+        double probability = Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0);
+        logger.info(String.format("[Test: %s][line: %d][proba: %.3f]",test.getName(),lineNumber,probability));
+        return probability;
     }
 
     /**
@@ -106,7 +102,12 @@ public class VocabularyStrategy implements Strategy {
 
             testFlakinessProbability = this.model.computeProbability(completeBody);
             computeStatementProbability(test);
-        } catch (Exception e) {
+        }
+        catch (NullPointerException npe){
+            npe.printStackTrace();
+            testFlakinessProbability = 0.0;
+        }
+        catch (Exception e) {
             this.logger.error(String.format("Failed to compute test probability, default to 0.0 for test '%s': %s",
                     test.getName(),
                     e.getMessage()
