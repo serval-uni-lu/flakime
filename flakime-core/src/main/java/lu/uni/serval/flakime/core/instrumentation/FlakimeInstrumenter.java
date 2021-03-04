@@ -21,42 +21,48 @@ public class FlakimeInstrumenter {
      * @throws CannotCompileException Thrown if the local variables added do not respect the Java syntax
      */
     public static void instrument(TestMethod testMethod, Strategy strategy) throws CannotCompileException {
-        testMethod.addLocalVariable(randomVariableName, CtClass.doubleType);
-        testMethod.insertBefore(String.format("%s = Math.random();", randomVariableName));
+//        testMethod.addLocalVariable(randomVariableName, CtClass.doubleType);
+//        testMethod.insertBefore(String.format("%s = Math.random();", randomVariableName));
 
-        testMethod.addLocalVariable(flakimeDisableFlag, CtClass.booleanType);
+//        testMethod.addLocalVariable(flakimeDisableFlag, CtClass.booleanType);
 //        testMethod.insertBefore(String.format("%s = Boolean.parseBoolean(System.getenv(\"FLAKIME_DISABLE\"));", flakimeDisableFlag));
-
+        double randomDouble = Math.random();
         for (int lineNumber : testMethod.getStatementLineNumbers()) {
-            final String payload = computePayload(testMethod, strategy, lineNumber);
-            testMethod.insertAt(lineNumber, payload);
+            final String payload = computePayload(testMethod, strategy, lineNumber,randomDouble);
+            testMethod.insertAt(lineNumber+1, payload);
         }
     }
 
     /**
-     * Method to compute the effective payload to be injected in the test method
+     * Method to compute the effective payload to be injected in the test methodpl
      *
      * @param testMethod The targeted test method
      * @param strategy   The flakiness probability calculation strategy
      * @param lineNumber The line number corresponding to the execution statement
      * @return The effective source code string to be injected.
      */
-    private static String computePayload(TestMethod testMethod, Strategy strategy, int lineNumber) {
+    private static String computePayload(TestMethod testMethod, Strategy strategy, int lineNumber,double randomDouble) {
         final StringBuilder result = new StringBuilder();
         double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
-
         //TODO Add environment var check to the inserted string
         if (probability > 0) {
-            result.append("if( !")
+            result.append("{if(!")
                     .append("Boolean.parseBoolean(System.getenv(\"FLAKIME_DISABLE\"))")
                     .append(" && (")
-                    .append(randomVariableName)
+                    .append(randomDouble)
                     .append("<")
                     .append(probability)
-                    .append(")){throw new Exception(\"")
+                    .append("))")
+                    .append("{")
+                    .append("{")
+                    .append("java.io.FileWriter fw = new java.io.FileWriter(\" output__"+testMethod.getName()+".out \",true);")
+                    .append("fw.write(\"Flaked HERE:["+testMethod.getName()+"]["+lineNumber+"]["+probability+"]\\n\");")
+                    .append("fw.close();")
+                    .append("}")
+                    .append("throw new Exception(\"")
                     .append("[flakinessProba:")
                     .append(probability)
-                    .append("]\");}");
+                    .append("]\");}}");
         }
 
         return result.toString();

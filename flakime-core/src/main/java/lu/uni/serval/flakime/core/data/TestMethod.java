@@ -20,6 +20,7 @@ public class TestMethod {
     private final CtMethod ctMethod;
     private final ControlFlow controlFlow;
     private final File sourceCodeFile;
+    private Set<Integer> statementLineNumbers;
 
     public ControlFlow.Block[] getBlocks() {
         return controlFlow.basicBlocks();
@@ -38,6 +39,9 @@ public class TestMethod {
         this.ctMethod = ctMethod;
         this.sourceCodeFile = sourceCode;
         this.controlFlow = new ControlFlow(this.ctMethod);
+        this.statementLineNumbers = Arrays.stream(this.controlFlow.basicBlocks())
+                .map(block -> this.ctMethod.getMethodInfo().getLineNumber(block.position()))
+                .collect(Collectors.toSet());
     }
 
     public CtMethod getCtMethod() {
@@ -51,9 +55,7 @@ public class TestMethod {
      * @return The set of line number that are right after a statement.
      */
     public Set<Integer> getStatementLineNumbers(){
-        return Arrays.stream(this.controlFlow.basicBlocks())
-                .map(block -> this.ctMethod.getMethodInfo().getLineNumber(block.position()))
-                .collect(Collectors.toSet());
+        return this.statementLineNumbers;
     }
 
     /**
@@ -92,17 +94,20 @@ public class TestMethod {
      */
     public void insertAt(int lineNumber, String payload) {
         try {
+            logger.info(String.format("[%s][lineNumber: %d]",this.getName(),lineNumber));
             this.ctMethod.insertAt(lineNumber, payload);
             logger.debug(String.format("Inserted payload at line %s in method %s",
                     lineNumber,
                     this.ctMethod.getLongName()
             ));
         } catch (CannotCompileException e) {
+//            logger.error(String.format("[%s][blockStartLine: %d]",this.getName(),lineNumber));
             logger.error(String.format("Failed to insert payload at line %d in method '%s': %s",
                     lineNumber,
                     this.ctMethod.getLongName(),
                     e.getMessage()
             ));
+//            e.printStackTrace();
         }
     }
 
