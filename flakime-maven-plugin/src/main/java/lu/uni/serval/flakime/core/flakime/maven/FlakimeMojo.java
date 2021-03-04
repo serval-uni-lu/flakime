@@ -26,24 +26,26 @@ import org.apache.maven.project.MavenProject;
         defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,
         requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
-
     @Parameter(property = "project", readonly = true)
-    MavenProject mavenProject;
+    private MavenProject mavenProject;
 
     @Parameter(defaultValue = "bernoulli", property = "flakime.strategy")
-    String strategy;
+    private String strategy;
 
     @Parameter(defaultValue = "0.05", property = "flakime.flakeRate")
-    float flakeRate;
+    private float flakeRate;
 
     @Parameter(property = "flakime.testAnnotations", required = true)
-    Set<String> testAnnotations;
+    private Set<String> testAnnotations;
 
     @Parameter(defaultValue = "/target/test-classes", property = "flakime.testClassDirectory")
     private String testClassDirectory;
 
     @Parameter(defaultValue = "/src/test/java", property = "flakime.testSourceDirectory")
     private String testSourceDirectory;
+
+    @Parameter(defaultValue = "FLAKIME_DISABLE", property = "flakime.")
+    private String disableFlag;
 
     @Parameter
     private Properties strategyParameters;
@@ -88,7 +90,7 @@ public class FlakimeMojo extends AbstractMojo {
                         logger.info(String.format("\tProbability of %s: %f",testMethod.getName(),probability));
 
                         if (probability > (1 - flakeRate)) {
-                            FlakimeInstrumenter.instrument(testMethod, strategyImpl);
+                            FlakimeInstrumenter.instrument(testMethod, strategyImpl, disableFlag);
                         }
                     } catch (CannotCompileException e) {
                         logger.warn(String.format("Failed to instrument method %s: %s",
