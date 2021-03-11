@@ -16,15 +16,19 @@ public class FlakimeInstrumenter {
     private static final String randomVariableName = "__FLAKIME_RANDOM_VARIABLE__" + Instant.now().getEpochSecond();
     private static final String flakimeDisableFlag = "__FLAKIME_DISABLE_FLAG__";
 
+
     /**
-     * Method that will trigger the computation of the payload and the injection of the correct local variables.
+     * Method that triggers the computation of the payload and insert it at the given source code position
      *
-     * @param testMethod The targeted method.
-     * @param strategy   The flakiness probability calculation strategy
-     * @throws CloneNotSupportedException Thrown if the local variables added do not respect the Java syntax
+     * @param testMethod The targeted test method
+     * @param strategy The strategy to use (see {@link lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary.VocabularyStrategy}, {@link lu.uni.serval.flakime.core.instrumentation.strategies.bernoulli.BernoulliStrategy}
+     * @param outputDir The directory where the flake position report file will be written
+     * @param disableFlag The environment variable name that control if the flake will occur
+     * @param flakeRate The flake rate
+     * @throws CannotCompileException if the source code compilation Fails
      */
     public static void instrument(TestMethod testMethod, Strategy strategy, File outputDir,String disableFlag,double flakeRate)
-            throws CloneNotSupportedException, CannotCompileException, BadBytecode {
+            throws CannotCompileException{
         testMethod.addLocalVariable(randomVariableName, CtClass.doubleType);
         testMethod.insertBefore(String.format("%s = Math.random();", randomVariableName));
 
@@ -100,7 +104,7 @@ public class FlakimeInstrumenter {
 //    private static String computePayload_2(TestMethod testMethod, Strategy strategy, int lineNumber,double randomDouble) {
 //        final StringBuilder result = new StringBuilder();
 //        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
-//        //TODO Add environment var check to the inserted string
+//
 //        if (probability > 0) {
 //            result.append("{if(!")
 //                    .append("Boolean.parseBoolean(System.getenv(\"FLAKIME_DISABLE\"))")
@@ -127,7 +131,7 @@ public class FlakimeInstrumenter {
 //    private static String computePayload_3(TestMethod testMethod, Strategy strategy, int lineNumber,double randomDouble) {
 //        final StringBuilder result = new StringBuilder();
 //        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
-//        //TODO Add environment var check to the inserted string
+//
 //        if (probability > 0) {
 //            result
 //

@@ -7,17 +7,13 @@ import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
 import lu.uni.serval.flakime.core.utils.Logger;
 
 /**
- * Strategy implementation that follows bernoulli distribution.
+ * Strategy implementation that follows normal distribution.
  * <p>
- * The probability of flaking after the execution of a statement is p. (probability of not flaking is 1-p)
+ * The probability of flaking after the execution of a basic block is p. (probability of not flaking is 1-p)
  * Each statement has the same flakiness probability.
  * <p>
- * fixed p = 0.005
- * <p>
- * The overall test flakiness probability is given by P(test) = (1 - (1-p)^#numberOfStatements))
- * i.e. the probability success (thus to flake) after #numberOfStatements trials
- * <p>
- * The statement flakiness probability is given by P(stmt) = 1 - (1-p)^#executedStmts
+ * The probability p is calculated by multiplying the proportion of executed lines of code wrt overall number of lines of code in the method body
+ * by the pre-set flake rate
  */
 public class BernoulliStrategy implements Strategy {
     private final Logger logger;
