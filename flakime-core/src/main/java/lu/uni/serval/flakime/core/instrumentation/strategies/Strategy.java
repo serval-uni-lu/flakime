@@ -25,7 +25,7 @@ public interface Strategy {
      * @param lineNumber The statement line number
      * @return The double value representing the probability of the statement being flaky.
      */
-    double getTestFlakinessProbability(TestMethod test, int lineNumber);
+    double getTestFlakinessProbability(TestMethod test, int lineNumber,double flakeRate);
 
     /**
      * Method that computes the overall test flakiness probability.
@@ -33,7 +33,7 @@ public interface Strategy {
      * @param test The test method on which the probability is calculated
      * @return The double value representing the probability of the test being flaky
      */
-    double getTestFlakinessProbability(TestMethod test);
+    double getTestFlakinessProbability(TestMethod test,double flakeRate);
 
     void postProcess();
 }

@@ -90,12 +90,9 @@ public class FlakimeMojo extends AbstractMojo {
                     logger.debug(String.format("\tProcess method %s", testMethod.getName()));
 
                     try {
-                        double probability = strategyImpl.getTestFlakinessProbability(testMethod);
+                        double probability = strategyImpl.getTestFlakinessProbability(testMethod,flakeRate);
                         logger.info(String.format("\tProbability of %s: %f",testMethod.getName(),probability));
-
-                        if (probability > (1 - flakeRate)) {
-                            FlakimeInstrumenter.instrument(testMethod, strategyImpl,outputDirectory,disableFlagName);
-                        }
+                        FlakimeInstrumenter.instrument(testMethod, strategyImpl,outputDirectory,disableFlagName,flakeRate);
                     } catch (Exception e) {
                         logger.warn(String.format("Failed to instrument method %s: %s",
                                 testMethod.getName(),

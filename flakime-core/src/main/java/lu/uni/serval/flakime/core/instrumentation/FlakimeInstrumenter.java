@@ -23,7 +23,7 @@ public class FlakimeInstrumenter {
      * @param strategy   The flakiness probability calculation strategy
      * @throws CloneNotSupportedException Thrown if the local variables added do not respect the Java syntax
      */
-    public static void instrument(TestMethod testMethod, Strategy strategy, File outputDir,String disableFlag)
+    public static void instrument(TestMethod testMethod, Strategy strategy, File outputDir,String disableFlag,double flakeRate)
             throws CloneNotSupportedException, CannotCompileException, BadBytecode {
         testMethod.addLocalVariable(randomVariableName, CtClass.doubleType);
         testMethod.insertBefore(String.format("%s = Math.random();", randomVariableName));
@@ -34,8 +34,8 @@ public class FlakimeInstrumenter {
         double randomDouble = Math.random();
         Set<Integer> statementLineNumbers = testMethod.getStatementLineNumbers();
         for (int lineNumber : statementLineNumbers) {
-            final String payload = computePayload(testMethod, strategy, lineNumber,outputDir);
-            System.out.println("Inserting #["+payload+"]#");
+            final String payload = computePayload(testMethod, strategy, lineNumber,outputDir,flakeRate);
+//            System.out.println("Inserting #["+payload+"]#");
             testMethod.insertAt(lineNumber+1,payload);
         }
     }
@@ -52,9 +52,9 @@ public class FlakimeInstrumenter {
      * @param lineNumber The line number corresponding to the execution statement
      * @return The effective source code string to be injected.
      */
-    private static String computePayload(TestMethod testMethod, Strategy strategy, int lineNumber,File outputDir) {
+    private static String computePayload(TestMethod testMethod, Strategy strategy, int lineNumber,File outputDir,double flakeRate) {
         final StringBuilder result = new StringBuilder();
-        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
+        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber,flakeRate);
         String path = outputDir.getAbsolutePath().replace("\\","\\\\");
         outputDir.mkdir();
 
@@ -90,54 +90,54 @@ public class FlakimeInstrumenter {
         result.append(declaration);
         result.append("\n");
         result.append("fw.write(");
-        String filePayload = String.format("String.valueOf(%s)+\",%d,%.2f\"","System.currentTimeMillis()",lineNumber,probability);
+        String filePayload = String.format("String.valueOf(%s)+\",%d,%.2f\\n\"","System.currentTimeMillis()",lineNumber,probability);
         result.append(filePayload).append(");");
         result.append("\n");
         result.append("fw.close();");
         return result.toString();
     }
 
-    private static String computePayload_2(TestMethod testMethod, Strategy strategy, int lineNumber,double randomDouble) {
-        final StringBuilder result = new StringBuilder();
-        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
-        //TODO Add environment var check to the inserted string
-        if (probability > 0) {
-            result.append("{if(!")
-                    .append("Boolean.parseBoolean(System.getenv(\"FLAKIME_DISABLE\"))")
-                    .append(" && (")
-                    .append(randomDouble)
-                    .append("<")
-                    .append(probability)
-                    .append("))")
-                    .append("{")
-                    .append("{")
-                    .append("java.io.FileWriter fw = new java.io.FileWriter(\" output__"+testMethod.getName()+".out \",true);")
-                    .append("fw.write(\"Flaked HERE:["+testMethod.getName()+"]["+lineNumber+"]["+probability+"]\\n\");")
-                    .append("fw.close();")
-                    .append("}")
-                    .append("System.err.println(\"flakked\")")
-                    .append("")
-                    .append("")
-                    .append(";}}");
-        }
-
-        return result.toString();
-    }
-
-    private static String computePayload_3(TestMethod testMethod, Strategy strategy, int lineNumber,double randomDouble) {
-        final StringBuilder result = new StringBuilder();
-        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
-        //TODO Add environment var check to the inserted string
-        if (probability > 0) {
-            result
-
-                    .append(";{")
-//                    .append("Object flakime = null;")
-                    .append("System.err.println(\"Testhere "+lineNumber+"\");")
-                    .append("}");
-
-        }
-
-        return result.toString();
-    }
+//    private static String computePayload_2(TestMethod testMethod, Strategy strategy, int lineNumber,double randomDouble) {
+//        final StringBuilder result = new StringBuilder();
+//        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
+//        //TODO Add environment var check to the inserted string
+//        if (probability > 0) {
+//            result.append("{if(!")
+//                    .append("Boolean.parseBoolean(System.getenv(\"FLAKIME_DISABLE\"))")
+//                    .append(" && (")
+//                    .append(randomDouble)
+//                    .append("<")
+//                    .append(probability)
+//                    .append("))")
+//                    .append("{")
+//                    .append("{")
+//                    .append("java.io.FileWriter fw = new java.io.FileWriter(\" output__"+testMethod.getName()+".out \",true);")
+//                    .append("fw.write(\"Flaked HERE:["+testMethod.getName()+"]["+lineNumber+"]["+probability+"]\\n\");")
+//                    .append("fw.close();")
+//                    .append("}")
+//                    .append("System.err.println(\"flakked\")")
+//                    .append("")
+//                    .append("")
+//                    .append(";}}");
+//        }
+//
+//        return result.toString();
+//    }
+//
+//    private static String computePayload_3(TestMethod testMethod, Strategy strategy, int lineNumber,double randomDouble) {
+//        final StringBuilder result = new StringBuilder();
+//        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
+//        //TODO Add environment var check to the inserted string
+//        if (probability > 0) {
+//            result
+//
+//                    .append(";{")
+////                    .append("Object flakime = null;")
+//                    .append("System.err.println(\"Testhere "+lineNumber+"\");")
+//                    .append("}");
+//
+//        }
+//
+//        return result.toString();
+//    }
 }

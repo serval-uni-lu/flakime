@@ -72,8 +72,8 @@ public class VocabularyStrategy implements Strategy {
      * @return Return the probability of the codeBlock to be flaky
      */
     @Override
-    public double getTestFlakinessProbability(TestMethod test, int lineNumber) {
-        double probability = Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0);
+    public double getTestFlakinessProbability(TestMethod test, int lineNumber,double flakeRate) {
+        double probability = Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0)*flakeRate;
         logger.info(String.format("[Test: %s][line: %d][proba: %.3f]",test.getName(),lineNumber,probability));
         return probability;
     }
@@ -85,7 +85,7 @@ public class VocabularyStrategy implements Strategy {
      * @return The probability of being flaky
      */
     @Override
-    public double getTestFlakinessProbability(TestMethod test) {
+    public double getTestFlakinessProbability(TestMethod test,double flakeRate) {
 
         double testFlakinessProbability;
 
@@ -100,8 +100,8 @@ public class VocabularyStrategy implements Strategy {
                     .reduce((a, b) -> a + " " + b)
                     .get();
 
-            testFlakinessProbability = this.model.computeProbability(completeBody);
-            computeStatementProbability(test);
+            testFlakinessProbability = this.model.computeProbability(completeBody); //0.15
+            computeStatementProbability(test,testFlakinessProbability);
         }
         catch (NullPointerException npe){
             npe.printStackTrace();
@@ -116,7 +116,7 @@ public class VocabularyStrategy implements Strategy {
             testFlakinessProbability = 0.0;
         }
 
-        return testFlakinessProbability;
+        return testFlakinessProbability*flakeRate;
     }
 
     /**
@@ -125,7 +125,7 @@ public class VocabularyStrategy implements Strategy {
      * @param test The test method to extract the code blocks and compute flakiness probability
      * @throws IOException,Exception if the TestMethod source file could not be read or if an error occurs during prediction
      */
-    private void computeStatementProbability(TestMethod test) throws Exception {
+    private void computeStatementProbability(TestMethod test,double testProbability) throws Exception {
         double totalProbabilities = 0.0;
 
         this.probabilitiesPerStatement = new HashMap<>();
@@ -135,7 +135,7 @@ public class VocabularyStrategy implements Strategy {
 
         for (Integer statementNum : test.getStatementLineNumbers()) {
             final String bodyToLine = getTextBodyToLine(methodBodyText, statementNum);
-            statementProbability = this.model.computeProbability(bodyToLine);
+            statementProbability = this.model.computeProbability(bodyToLine); //proba de flakiness until linenumber
 
             this.probabilitiesPerStatement.put(statementNum, statementProbability);
 
@@ -145,10 +145,10 @@ public class VocabularyStrategy implements Strategy {
         double aggregateProbability = 0.0;
 
         for (Integer statementNum : test.getStatementLineNumbers()) {
-            double unNormalizedP = this.probabilitiesPerStatement.get(statementNum);
-            double statementPnormalized = unNormalizedP / totalProbabilities;
+            double unNormalizedP = this.probabilitiesPerStatement.get(statementNum); //proba de flakiness until linenumber
+            double statementPnormalized = unNormalizedP / totalProbabilities; //Proportion of the block proba wrt overall sum of proba
             aggregateProbability += statementPnormalized;
-            this.probabilitiesPerStatement.put(statementNum, aggregateProbability);
+            this.probabilitiesPerStatement.put(statementNum, aggregateProbability*testProbability);
         }
     }
 

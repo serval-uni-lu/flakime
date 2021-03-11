@@ -1,5 +1,6 @@
 package lu.uni.serval.flakime.core.instrumentation.strategies.bernoulli;
 
+import java.util.Collections;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestMethod;
 import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
@@ -32,18 +33,26 @@ public class BernoulliStrategy implements Strategy {
     }
 
     @Override
-    public double getTestFlakinessProbability(TestMethod test, int lineNumber) {
-        double testProbability = getTestFlakinessProbability(test);
-        double statementProbability = getStatementFlakinessProbability(test, lineNumber);
+    public double getTestFlakinessProbability(TestMethod test, int lineNumber,double flakeRate) {
 
-        return statementProbability / testProbability;
+        int numberOfLines = Collections.max(test.getStatementLineNumbers()) - Collections.min(test.getStatementLineNumbers())+1;
+
+        int executedLine = 1 + lineNumber - Collections.min(test.getStatementLineNumbers());
+
+        double proportion = (double)executedLine/numberOfLines;
+        logger.info(String.format("[%s][total: %d][executed: %d]",test.getName(),numberOfLines,executedLine));
+        double testProbability = getTestFlakinessProbability(test,flakeRate);
+        double statementProbability = getStatementFlakinessProbability(test, lineNumber,flakeRate);
+
+        return proportion * flakeRate;
     }
 
     @Override
-    public double getTestFlakinessProbability(TestMethod test) {
-        int numberOfStatement = test.getStatementLineNumbers().size();
-        double probabilityOfNotFlaking = 1 - this.flakinessProbability;
-        return 1 - Math.pow(probabilityOfNotFlaking, numberOfStatement);
+    public double getTestFlakinessProbability(TestMethod test,double flakeRate) {
+        return flakeRate;
+//        int numberOfStatement = test.getStatementLineNumbers().size();
+//        double probabilityOfNotFlaking = 1 - this.flakinessProbability;
+//        return 1 - Math.pow(probabilityOfNotFlaking, numberOfStatement);
     }
 
 
@@ -52,7 +61,8 @@ public class BernoulliStrategy implements Strategy {
 
     }
 
-    private double getStatementFlakinessProbability(TestMethod test, int lineNumber) {
+    private double getStatementFlakinessProbability(TestMethod test, int lineNumber,double flakeRate) {
+
         int numberOfStatementExecuted = 1 + test.getStatementLineNumbers()
                 .stream()
                 .filter(line -> line < lineNumber)
