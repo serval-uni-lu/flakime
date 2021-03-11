@@ -1,5 +1,6 @@
 package lu.uni.serval.flakime.core.data;
 
+import java.util.List;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -19,6 +20,7 @@ public class TestClass implements Iterable<TestMethod> {
     private final CtClass ctClass;
     private final File sourceFile;
     private final File outputDirectory;
+    private List<TestMethod> testMethods;
 
     public TestClass(Logger logger, Set<String> testAnnotations, CtClass ctClass, File sourceFile, File outputDirectory) {
         this.logger = logger;
@@ -26,6 +28,12 @@ public class TestClass implements Iterable<TestMethod> {
         this.ctClass = ctClass;
         this.sourceFile = sourceFile;
         this.outputDirectory = outputDirectory;
+        this.testMethods = Arrays.stream(ctClass.getDeclaredMethods())
+                .filter(TestClass.this::isTest)
+                .map(m -> TestMethodFactory.create(logger, m, sourceFile,this.ctClass))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
     }
 
     public void write() throws IOException, CannotCompileException {
@@ -37,7 +45,7 @@ public class TestClass implements Iterable<TestMethod> {
     public Iterator<TestMethod> iterator(){
         return Arrays.stream(ctClass.getDeclaredMethods())
                 .filter(TestClass.this::isTest)
-                .map(m -> TestMethodFactory.create(logger, m, sourceFile))
+                .map(m -> TestMethodFactory.create(logger, m, sourceFile,this.ctClass))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList())
                 .iterator();
@@ -59,5 +67,9 @@ public class TestClass implements Iterable<TestMethod> {
 
     public String getName() {
         return this.ctClass.getName();
+    }
+
+    public List<TestMethod> getTestMethods() {
+        return testMethods;
     }
 }

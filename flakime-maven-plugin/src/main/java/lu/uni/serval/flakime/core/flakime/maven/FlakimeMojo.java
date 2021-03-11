@@ -26,17 +26,18 @@ import org.apache.maven.project.MavenProject;
         defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,
         requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
+
     @Parameter(property = "project", readonly = true)
-    private MavenProject mavenProject;
+    MavenProject mavenProject;
 
     @Parameter(defaultValue = "bernoulli", property = "flakime.strategy")
-    private String strategy;
+    String strategy;
 
     @Parameter(defaultValue = "0.05", property = "flakime.flakeRate")
-    private float flakeRate;
+    float flakeRate;
 
     @Parameter(property = "flakime.testAnnotations", required = true)
-    private Set<String> testAnnotations;
+    Set<String> testAnnotations;
 
     @Parameter(defaultValue = "/target/test-classes", property = "flakime.testClassDirectory")
     private String testClassDirectory;
@@ -44,11 +45,14 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "/src/test/java", property = "flakime.testSourceDirectory")
     private String testSourceDirectory;
 
-    @Parameter(defaultValue = "FLAKIME_DISABLE", property = "flakime.")
-    private String disableFlag;
-
     @Parameter
     private Properties strategyParameters;
+
+    @Parameter(defaultValue = "${project.build.directory}/flakime")
+    private File outputDirectory;
+
+    @Parameter(defaultValue = "FLAKIME_DISABLE", property = "flakime.disableFlag")
+    private String disableFlagName;
 
     /**
      * Plugin mojo entry point. The method iterates over all test-classes contained in the project.
@@ -81,7 +85,7 @@ public class FlakimeMojo extends AbstractMojo {
 
             for (TestClass testClass : project) {
                 logger.debug(String.format("Process class %s", testClass.getName()));
-
+                //TODO inject new method
                 for (TestMethod testMethod : testClass) {
                     logger.debug(String.format("\tProcess method %s", testMethod.getName()));
 
@@ -90,9 +94,9 @@ public class FlakimeMojo extends AbstractMojo {
                         logger.info(String.format("\tProbability of %s: %f",testMethod.getName(),probability));
 
                         if (probability > (1 - flakeRate)) {
-                            FlakimeInstrumenter.instrument(testMethod, strategyImpl, disableFlag);
+                            FlakimeInstrumenter.instrument(testMethod, strategyImpl,outputDirectory,disableFlagName);
                         }
-                    } catch (CannotCompileException e) {
+                    } catch (Exception e) {
                         logger.warn(String.format("Failed to instrument method %s: %s",
                                 testMethod.getName(),
                                 e.getMessage()

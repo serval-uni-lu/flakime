@@ -1,30 +1,46 @@
 package lu.uni.serval.flakime.core.data;
 
-import javassist.CannotCompileException;
-import javassist.CtClass;
-import javassist.CtMethod;
-import javassist.bytecode.BadBytecode;
-import javassist.bytecode.analysis.ControlFlow;
-import lu.uni.serval.flakime.core.utils.Logger;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javassist.CannotCompileException;
+import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.CtNewMethod;
+import javassist.Modifier;
+import javassist.NotFoundException;
+import javassist.bytecode.BadBytecode;
+import javassist.bytecode.Bytecode;
+import javassist.bytecode.CodeAttribute;
+import javassist.bytecode.CodeIterator;
+import javassist.bytecode.LineNumberAttribute;
+import javassist.bytecode.analysis.ControlFlow;
+import javassist.compiler.CompileError;
+import javassist.compiler.Javac;
+import lu.uni.serval.flakime.core.utils.Logger;
 
 /**
  * This class represent a Test method holding all information about the targeted (test) method to be transformed
  */
-public class TestMethod {
+public class TestMethod implements Cloneable {
     private final Logger logger;
-    private final CtMethod ctMethod;
-    private final ControlFlow controlFlow;
+    private CtMethod ctMethod;
+    private ControlFlow controlFlow;
     private final File sourceCodeFile;
+    private CtClass declaringClass;
     private Set<Integer> statementLineNumbers;
+
+
+    public Object clone()throws CloneNotSupportedException{
+        return super.clone();
+    }
 
     public ControlFlow.Block[] getBlocks() {
         return controlFlow.basicBlocks();
     }
+
+
 
     /**
      * TestMethod constructor
@@ -34,10 +50,11 @@ public class TestMethod {
      * @param sourceCode Instance of {@code File.class} pointing the method source files
      * @throws BadBytecode Thrown if the bytecode is malformed
      */
-    public TestMethod(Logger logger, CtMethod ctMethod, File sourceCode) throws BadBytecode {
+    public TestMethod(Logger logger, CtMethod ctMethod, File sourceCode,CtClass declaringClass) throws BadBytecode {
         this.logger = logger;
         this.ctMethod = ctMethod;
         this.sourceCodeFile = sourceCode;
+        this.declaringClass = declaringClass;
         this.controlFlow = new ControlFlow(this.ctMethod);
         this.statementLineNumbers = Arrays.stream(this.controlFlow.basicBlocks())
                 .map(block -> this.ctMethod.getMethodInfo().getLineNumber(block.position()))
@@ -90,24 +107,90 @@ public class TestMethod {
      * Insert a source code payload at a certain index in the {@code CtMethod} instance
      * @param lineNumber The target line to insert the payload
      * @param payload The source code to insert
-     *  if the Compilation of source code fails
+     *
+     *
+     * @throws CannotCompileException if the Compilation of source code fails
      */
-    public void insertAt(int lineNumber, String payload) {
+    public void insertAt(int lineNumber, String payload) throws CannotCompileException {
+
         try {
             logger.info(String.format("[%s][lineNumber: %d]",this.getName(),lineNumber));
-            this.ctMethod.insertAt(lineNumber, payload);
+            insertAt(lineNumber, true,payload);
             logger.debug(String.format("Inserted payload at line %s in method %s",
                     lineNumber,
                     this.ctMethod.getLongName()
             ));
+
         } catch (CannotCompileException e) {
-//            logger.error(String.format("[%s][blockStartLine: %d]",this.getName(),lineNumber));
+
             logger.error(String.format("Failed to insert payload at line %d in method '%s': %s",
                     lineNumber,
                     this.ctMethod.getLongName(),
                     e.getMessage()
             ));
-//            e.printStackTrace();
+
+        }
+    }
+
+    private int insertAt(int lineNum, boolean modify, String src)
+            throws CannotCompileException
+    {
+        CodeAttribute ca = ctMethod.getMethodInfo().getCodeAttribute();
+        if (ca == null)
+            throw new CannotCompileException("no method body");
+
+        LineNumberAttribute ainfo
+                = (LineNumberAttribute)ca.getAttribute(LineNumberAttribute.tag);
+        if (ainfo == null)
+            throw new CannotCompileException("no line number info");
+
+        LineNumberAttribute.Pc pc = ainfo.toNearPc(lineNum);
+        lineNum = pc.line;
+        int index = pc.index;
+        if (!modify)
+            return lineNum;
+
+        CtClass cc = declaringClass;
+//        cc.checkModify();
+        CodeIterator iterator = ca.iterator();
+        Javac jv = new Javac(cc);
+        try {
+            jv.recordLocalVariables(ca, index);
+            jv.recordParams(ctMethod.getParameterTypes(),
+                    Modifier.isStatic(ctMethod.getModifiers()));
+            jv.setMaxLocals(ca.getMaxLocals());
+            jv.compileStmnt(src);
+            Bytecode b = jv.getBytecode();
+            int locals = b.getMaxLocals();
+            int stack = b.getMaxStack();
+            ca.setMaxLocals(locals);
+
+            /* We assume that there is no values in the operand stack
+             * at the position where the bytecode is inserted.
+             */
+//            if (stack > ca.getMaxStack())
+//                ca.setMaxStack(stack);
+
+
+            /**
+             * Added by us
+             */
+            int currentStackHeight = ca.getMaxStack();
+            ca.setMaxStack(stack+currentStackHeight);
+
+            index = iterator.insertAt(index, b.get());
+            iterator.insert(b.getExceptionTable(), index);
+            ctMethod.getMethodInfo().rebuildStackMapIf6(cc.getClassPool(), cc.getClassFile2());
+            return lineNum;
+        }
+        catch (NotFoundException e) {
+            throw new CannotCompileException(e);
+        }
+        catch (CompileError e) {
+            throw new CannotCompileException(e);
+        }
+        catch (BadBytecode e) {
+            throw new CannotCompileException(e);
         }
     }
 

@@ -18,6 +18,7 @@ public class Project implements Iterable<TestClass> {
     private final File classDirectory;
     private final File sourceDirectory;
     private final ClassPool classPool;
+    private List<TestClass> testClasses;
 
     private Set<String> classNames;
 
@@ -27,6 +28,13 @@ public class Project implements Iterable<TestClass> {
         this.classDirectory = classDirectory;
         this.sourceDirectory = sourceDirectory;
         this.classPool = configureClassPool(getDefaultClassPool(), this.classDirectory, dependencies);
+        this.testClasses = getClassNames().stream()
+                .map(name -> getSourceFile(name)
+                        .map(file -> TestClassFactory.create(this.logger, this.testAnnotations, name, this.classPool, file, this.classDirectory))
+                        .orElse(null)
+                )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     public int getNumberClasses(){
@@ -126,5 +134,13 @@ public class Project implements Iterable<TestClass> {
         }
 
         return removeExtension(qualifiedFileName.replace(File.separator, "."));
+    }
+
+    public List<TestClass> getTestClasses() {
+        return testClasses;
+    }
+
+    public void setTestClasses(List<TestClass> testClasses) {
+        this.testClasses = testClasses;
     }
 }
