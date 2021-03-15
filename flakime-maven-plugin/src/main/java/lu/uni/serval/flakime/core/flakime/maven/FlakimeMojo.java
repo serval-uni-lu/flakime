@@ -22,9 +22,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-@Mojo(name = "flakime-injector",
-        defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES,
-        requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+@Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
 
     @Parameter(property = "project", readonly = true)
@@ -39,10 +37,10 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(property = "flakime.testAnnotations", required = true)
     Set<String> testAnnotations;
 
-    @Parameter(defaultValue = "/target/test-classes", property = "flakime.testClassDirectory")
+    @Parameter(defaultValue = "target/test-classes", property = "flakime.testClassDirectory")
     private String testClassDirectory;
 
-    @Parameter(defaultValue = "/src/test/java", property = "flakime.testSourceDirectory")
+    @Parameter(defaultValue = "src/test/java", property = "flakime.testSourceDirectory")
     private String testSourceDirectory;
 
     @Parameter
@@ -55,15 +53,16 @@ public class FlakimeMojo extends AbstractMojo {
     private String disableFlagName;
 
     /**
-     * Plugin mojo entry point. The method iterates over all test-classes contained in the project.
-     * For each of the test classes the method iterates over all the test method (annotated by @test).
-     * Finally the method calculates the flakiness probability of the given test method following the
-     * given strategy.
-     * If the test flakiness probability is greater than the flakerate, the test method is intrumented.
-     * Otherwise the test method is skipped.
+     * Plugin mojo entry point. The method iterates over all test-classes contained
+     * in the project. For each of the test classes the method iterates over all the
+     * test method (annotated by @test). Finally the method calculates the flakiness
+     * probability of the given test method following the given strategy. If the
+     * test flakiness probability is greater than the flakerate, the test method is
+     * intrumented. Otherwise the test method is skipped.
      *
      *
-     * @throws MojoExecutionException Thrown if any of the steps throws an exception during its execution.
+     * @throws MojoExecutionException Thrown if any of the steps throws an exception
+     *                                during its execution.
      */
 
     @Override
@@ -85,19 +84,18 @@ public class FlakimeMojo extends AbstractMojo {
 
             for (TestClass testClass : project) {
                 logger.debug(String.format("Process class %s", testClass.getName()));
-                //TODO inject new method
+                // TODO inject new method
                 for (TestMethod testMethod : testClass) {
                     logger.debug(String.format("\tProcess method %s", testMethod.getName()));
 
                     try {
-                        double probability = strategyImpl.getTestFlakinessProbability(testMethod,flakeRate);
-                        logger.info(String.format("\tProbability of %s: %f",testMethod.getName(),probability));
-                        FlakimeInstrumenter.instrument(testMethod, strategyImpl,outputDirectory,disableFlagName,flakeRate);
+                        double probability = strategyImpl.getTestFlakinessProbability(testMethod, flakeRate);
+                        logger.info(String.format("\tProbability of %s: %f", testMethod.getName(), probability));
+                        FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
+                                flakeRate);
                     } catch (Exception e) {
-                        logger.warn(String.format("Failed to instrument method %s: %s",
-                                testMethod.getName(),
-                                e.getMessage()
-                        ));
+                        logger.warn(String.format("Failed to instrument method %s: %s", testMethod.getName(),
+                                e.getMessage()));
                     }
                 }
 
@@ -117,20 +115,18 @@ public class FlakimeMojo extends AbstractMojo {
      * This method parse the {@code Maven project} into a {@code Project}
      *
      * @param mavenProject The target maven project containing the tests.
-     * @param mavenLogger Reference to logger
+     * @param mavenLogger  Reference to logger
      * @return The instantiated project
-     * @throws NotFoundException Thrown if the directories contains only jars or do not exist.
-     * @throws DependencyResolutionRequiredException Thrown if an artifact is used but not resolved
+     * @throws NotFoundException                     Thrown if the directories
+     *                                               contains only jars or do not
+     *                                               exist.
+     * @throws DependencyResolutionRequiredException Thrown if an artifact is used
+     *                                               but not resolved
      */
     public Project initializeProject(MavenProject mavenProject, MavenLogger mavenLogger)
             throws NotFoundException, DependencyResolutionRequiredException {
-        return new Project(
-                mavenLogger,
-                testAnnotations,
-                getDirectory(testClassDirectory),
-                getDirectory(testSourceDirectory),
-                mavenProject.getTestClasspathElements()
-        );
+        return new Project(mavenLogger, testAnnotations, getDirectory(testClassDirectory),
+                getDirectory(testSourceDirectory), mavenProject.getTestClasspathElements());
     }
 
     private File getDirectory(String path) {
