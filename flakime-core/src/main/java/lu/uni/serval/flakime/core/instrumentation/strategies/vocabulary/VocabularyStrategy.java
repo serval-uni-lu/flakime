@@ -35,23 +35,25 @@ public class VocabularyStrategy implements Strategy {
     }
 
     /**
-     * Vocabulary strategy preProcess entry point that will trigger either the building of the Random forest model or loading from file system.
+     * Vocabulary strategy preProcess entry point that will trigger either the
+     * building of the Random forest model or loading from file system.
      *
      * @param project The project to run the Strategy on
      * @throws Exception Thrown if buildModel failed
      */
     @Override
     public void preProcess(final Project project) throws Exception {
-            final InputStream dataSource = VocabularyStrategy.class.getClassLoader().getResourceAsStream("data/vocabulary.json");
-            final TrainingData trainingData = new TrainingData(dataSource);
-            final Set<String> additionalTrainingText = new HashSet<>();
+        final InputStream dataSource = VocabularyStrategy.class.getClassLoader()
+                .getResourceAsStream("data/vocabulary.json");
+        final TrainingData trainingData = new TrainingData(dataSource);
+        final Set<String> additionalTrainingText = new HashSet<>();
 
-            for (TestClass testClass : project) {
-                for (TestMethod testMethod : testClass) {
-                    final File f = testMethod.getSourceCodeFile();
-                    additionalTrainingText.addAll(this.getTestMethodBodyText(f, testMethod).values());
-                }
+        for (TestClass testClass : project) {
+            for (TestMethod testMethod : testClass) {
+                final File f = testMethod.getSourceCodeFile();
+                additionalTrainingText.addAll(this.getTestMethodBodyText(f, testMethod).values());
             }
+        }
 
         if (trainModel) {
             this.model = ModelFactory.create(this.modelImplementation, this.logger, this.nTrees, this.nThreads);
@@ -65,16 +67,19 @@ public class VocabularyStrategy implements Strategy {
     }
 
     /**
-     * Method to return the particular block of test body (identified by its starting line number) probability to be flaky based on the random Forest.
+     * Method to return the particular block of test body (identified by its
+     * starting line number) probability to be flaky based on the random Forest.
      *
      * @param test       The test method which the codeblcok is.
      * @param lineNumber The line number at which a particular statement is executed
      * @return Return the probability of the codeBlock to be flaky
      */
     @Override
-    public double getTestFlakinessProbability(TestMethod test, int lineNumber,double flakeRate) {
-        double probability = Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0)*flakeRate;
-        logger.info(String.format("[Test: %s][line: %d][proba: %.3f]",test.getName(),lineNumber,probability));
+    public double getTestFlakinessProbability(TestMethod test, int lineNumber, double flakeRate) {
+        double probability = Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0)
+                * flakeRate;
+        // logger.info(String.format("[Test: %s][line: %d][proba:
+        // %.3f]",test.getName(),lineNumber,probability));
         return probability;
     }
 
@@ -85,47 +90,43 @@ public class VocabularyStrategy implements Strategy {
      * @return The probability of being flaky
      */
     @Override
-    public double getTestFlakinessProbability(TestMethod test,double flakeRate) {
+    public double getTestFlakinessProbability(TestMethod test, double flakeRate) {
 
         double testFlakinessProbability;
 
         try {
             final Map<Integer, String> methodBodyText = this.getTestMethodBodyText(test.getSourceCodeFile(), test);
 
-            if(methodBodyText.isEmpty()){
+            if (methodBodyText.isEmpty()) {
                 return 0.0;
             }
 
-            final String completeBody = methodBodyText.values().stream()
-                    .reduce((a, b) -> a + " " + b)
-                    .get();
+            final String completeBody = methodBodyText.values().stream().reduce((a, b) -> a + " " + b).get();
 
-            testFlakinessProbability = this.model.computeProbability(completeBody); //0.15
-            computeStatementProbability(test,testFlakinessProbability);
-        }
-        catch (NullPointerException npe){
+            testFlakinessProbability = this.model.computeProbability(completeBody); // 0.15
+            computeStatementProbability(test, testFlakinessProbability);
+        } catch (NullPointerException npe) {
             npe.printStackTrace();
             testFlakinessProbability = 0.0;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             this.logger.error(String.format("Failed to compute test probability, default to 0.0 for test '%s': %s",
-                    test.getName(),
-                    e.getMessage()
-            ));
+                    test.getName(), e.getMessage()));
 
             testFlakinessProbability = 0.0;
         }
 
-        return testFlakinessProbability*flakeRate;
+        return testFlakinessProbability * flakeRate;
     }
 
     /**
      * Method that compute the probability of each code blocks of the test method
      *
-     * @param test The test method to extract the code blocks and compute flakiness probability
-     * @throws IOException,Exception if the TestMethod source file could not be read or if an error occurs during prediction
+     * @param test The test method to extract the code blocks and compute flakiness
+     *             probability
+     * @throws IOException,Exception if the TestMethod source file could not be read
+     *                               or if an error occurs during prediction
      */
-    private void computeStatementProbability(TestMethod test,double testProbability) throws Exception {
+    private void computeStatementProbability(TestMethod test, double testProbability) throws Exception {
         double totalProbabilities = 0.0;
 
         this.probabilitiesPerStatement = new HashMap<>();
@@ -135,7 +136,7 @@ public class VocabularyStrategy implements Strategy {
 
         for (Integer statementNum : test.getStatementLineNumbers()) {
             final String bodyToLine = getTextBodyToLine(methodBodyText, statementNum);
-            statementProbability = this.model.computeProbability(bodyToLine); //proba de flakiness until linenumber
+            statementProbability = this.model.computeProbability(bodyToLine); // proba de flakiness until linenumber
 
             this.probabilitiesPerStatement.put(statementNum, statementProbability);
 
@@ -145,10 +146,12 @@ public class VocabularyStrategy implements Strategy {
         double aggregateProbability = 0.0;
 
         for (Integer statementNum : test.getStatementLineNumbers()) {
-            double unNormalizedP = this.probabilitiesPerStatement.get(statementNum); //proba de flakiness until linenumber
-            double statementPnormalized = unNormalizedP / totalProbabilities; //Proportion of the block proba wrt overall sum of proba
+            double unNormalizedP = this.probabilitiesPerStatement.get(statementNum); // proba de flakiness until
+                                                                                     // linenumber
+            double statementPnormalized = unNormalizedP / totalProbabilities; // Proportion of the block proba wrt
+                                                                              // overall sum of proba
             aggregateProbability += statementPnormalized;
-            this.probabilitiesPerStatement.put(statementNum, aggregateProbability*testProbability);
+            this.probabilitiesPerStatement.put(statementNum, aggregateProbability * testProbability);
         }
     }
 
@@ -158,17 +161,21 @@ public class VocabularyStrategy implements Strategy {
     }
 
     /**
-     * Method to get the string corresponding to the codeblock from the beginning of the method until a specific line number.
+     * Method to get the string corresponding to the codeblock from the beginning of
+     * the method until a specific line number.
      *
-     * @param methodBodyText The whole method body with the corresponding line number. Each entry corresponds to a a line number and its corresponding text.
-     * @param lineNumber     The lineNumber until which the string should be recorded.
+     * @param methodBodyText The whole method body with the corresponding line
+     *                       number. Each entry corresponds to a a line number and
+     *                       its corresponding text.
+     * @param lineNumber     The lineNumber until which the string should be
+     *                       recorded.
      * @return The resulting codeblock
      */
     public String getTextBodyToLine(Map<Integer, String> methodBodyText, int lineNumber) {
         final StringBuilder sb = new StringBuilder();
 
         for (Integer currentLine : methodBodyText.keySet()) {
-            if(currentLine > lineNumber){
+            if (currentLine > lineNumber) {
                 break;
             }
 
@@ -179,7 +186,9 @@ public class VocabularyStrategy implements Strategy {
     }
 
     /**
-     * Retrieve the text set corresponding to a method in the source file. The granularity is a {@code ControlFlow.Block} uniquely identified by its starting line number in the source code.
+     * Retrieve the text set corresponding to a method in the source file. The
+     * granularity is a {@code ControlFlow.Block} uniquely identified by its
+     * starting line number in the source code.
      *
      * @param f      the source file
      * @param method the corresponding {@code TestMethod} instance
@@ -190,16 +199,14 @@ public class VocabularyStrategy implements Strategy {
         final Map<Integer, String> resultBody = new HashMap<>();
         final BufferedReader br = new BufferedReader(new FileReader(f));
         final List<String> sb = br.lines().collect(Collectors.toList());
-        final LineNumberAttribute ainfo = (LineNumberAttribute) method.getCtMethod()
-                .getMethodInfo()
-                .getCodeAttribute()
+        final LineNumberAttribute ainfo = (LineNumberAttribute) method.getCtMethod().getMethodInfo().getCodeAttribute()
                 .getAttribute(LineNumberAttribute.tag);
 
         for (ControlFlow.Block b : method.getBlocks()) {
-            int length = b.length();//The ByteCode size of the Basic block
-            int pos = b.position(); //The position of the first byteCode instruction of the basic block
-            int startLineNumber = ainfo.toLineNumber(pos); //The corresponding line number in the source code
-            int endLineNumber = ainfo.toLineNumber(pos + length); //The First line of the next BasicBlock
+            int length = b.length();// The ByteCode size of the Basic block
+            int pos = b.position(); // The position of the first byteCode instruction of the basic block
+            int startLineNumber = ainfo.toLineNumber(pos); // The corresponding line number in the source code
+            int endLineNumber = ainfo.toLineNumber(pos + length); // The First line of the next BasicBlock
 
             final StringBuilder stringBuilder = new StringBuilder();
             for (int ln = startLineNumber; ln <= endLineNumber; ln++) {

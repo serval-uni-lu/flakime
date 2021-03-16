@@ -22,7 +22,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-@Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+@Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.TEST_COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
 
     @Parameter(property = "project", readonly = true)
@@ -90,7 +90,8 @@ public class FlakimeMojo extends AbstractMojo {
 
                     try {
                         double probability = strategyImpl.getTestFlakinessProbability(testMethod, flakeRate);
-                        logger.info(String.format("\tProbability of %s: %f", testMethod.getName(), probability));
+                        // logger.info(String.format("\tProbability of %s: %f", testMethod.getName(),
+                        // probability));
                         FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
                                 flakeRate);
                     } catch (Exception e) {

@@ -21,7 +21,8 @@ import javassist.compiler.Javac;
 import lu.uni.serval.flakime.core.utils.Logger;
 
 /**
- * This class represent a Test method holding all information about the targeted (test) method to be transformed
+ * This class represent a Test method holding all information about the targeted
+ * (test) method to be transformed
  */
 public class TestMethod implements Cloneable {
     private final Logger logger;
@@ -31,8 +32,7 @@ public class TestMethod implements Cloneable {
     private CtClass declaringClass;
     private Set<Integer> statementLineNumbers;
 
-
-    public Object clone()throws CloneNotSupportedException{
+    public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }
 
@@ -40,17 +40,16 @@ public class TestMethod implements Cloneable {
         return controlFlow.basicBlocks();
     }
 
-
-
     /**
      * TestMethod constructor
      *
-     * @param logger Reference to logger
-     * @param ctMethod Instance of javassist {@code CtMethod.class}
-     * @param sourceCode Instance of {@code File.class} pointing the method source files
+     * @param logger     Reference to logger
+     * @param ctMethod   Instance of javassist {@code CtMethod.class}
+     * @param sourceCode Instance of {@code File.class} pointing the method source
+     *                   files
      * @throws BadBytecode Thrown if the bytecode is malformed
      */
-    public TestMethod(Logger logger, CtMethod ctMethod, File sourceCode,CtClass declaringClass) throws BadBytecode {
+    public TestMethod(Logger logger, CtMethod ctMethod, File sourceCode, CtClass declaringClass) throws BadBytecode {
         this.logger = logger;
         this.ctMethod = ctMethod;
         this.sourceCodeFile = sourceCode;
@@ -67,46 +66,47 @@ public class TestMethod implements Cloneable {
 
     /**
      *
-     * Helper function to extract the line number following all {@code BasicBlocks} representing an statement.
+     * Helper function to extract the line number following all {@code BasicBlocks}
+     * representing an statement.
      *
      * @return The set of line number that are right after a statement.
      */
-    public Set<Integer> getStatementLineNumbers(){
+    public Set<Integer> getStatementLineNumbers() {
         return this.statementLineNumbers;
     }
 
     /**
-     * Helper function to insert a new double variable in the {@code CtMethod} context
+     * Helper function to insert a new double variable in the {@code CtMethod}
+     * context
      *
-     * @param variableName Unique variable identifier (Must not overwrite existing method or global variables names)
-     * @param type Class of the parameter to add
+     * @param variableName Unique variable identifier (Must not overwrite existing
+     *                     method or global variables names)
+     * @param type         Class of the parameter to add
      * @throws CannotCompileException If the variable does no follow java syntax
      */
-    public void addLocalVariable(String variableName,CtClass type) throws CannotCompileException {
+    public void addLocalVariable(String variableName, CtClass type) throws CannotCompileException {
         this.ctMethod.addLocalVariable(variableName, type);
-        logger.debug(String.format("Inserted local variable '%s' to method %s",
-                variableName,
-                this.ctMethod.getLongName()
-        ));
+        logger.debug(
+                String.format("Inserted local variable '%s' to method %s", variableName, this.ctMethod.getLongName()));
     }
-    public void insertBefore(String payload){
+
+    public void insertBefore(String payload) {
         try {
             this.ctMethod.insertBefore(payload);
-            logger.debug(String.format("Inserted '%s' at beginning of method %s",
-                    payload,
-                    this.ctMethod.getLongName()
-            ));
+            logger.debug(
+                    String.format("Inserted '%s' at beginning of method %s", payload, this.ctMethod.getLongName()));
         } catch (CannotCompileException e) {
-            logger.error(String.format("Failed to insert payload before method '%s': %s",
-                    this.ctMethod.getLongName(),
-                    e.getMessage()
-            ));
+            logger.error(String.format("Failed to insert payload before method '%s': %s", this.ctMethod.getLongName(),
+                    e.getMessage()));
         }
     }
+
     /**
-     * Insert a source code payload at a certain index in the {@code CtMethod} instance
+     * Insert a source code payload at a certain index in the {@code CtMethod}
+     * instance
+     * 
      * @param lineNumber The target line to insert the payload
-     * @param payload The source code to insert
+     * @param payload    The source code to insert
      *
      *
      * @throws CannotCompileException if the Compilation of source code fails
@@ -114,33 +114,25 @@ public class TestMethod implements Cloneable {
     public void insertAt(int lineNumber, String payload) throws CannotCompileException {
 
         try {
-            logger.info(String.format("[%s][lineNumber: %d]",this.getName(),lineNumber));
-            insertAt(lineNumber, true,payload);
-            logger.debug(String.format("Inserted payload at line %s in method %s",
-                    lineNumber,
-                    this.ctMethod.getLongName()
-            ));
+            logger.debug(String.format("[%s][lineNumber: %d]", this.getName(), lineNumber));
+            insertAt(lineNumber, true, payload);
+            logger.debug(
+                    String.format("Inserted payload at line %s in method %s", lineNumber, this.ctMethod.getLongName()));
 
         } catch (CannotCompileException e) {
 
-            logger.error(String.format("Failed to insert payload at line %d in method '%s': %s",
-                    lineNumber,
-                    this.ctMethod.getLongName(),
-                    e.getMessage()
-            ));
+            logger.error(String.format("Failed to insert payload at line %d in method '%s': %s", lineNumber,
+                    this.ctMethod.getLongName(), e.getMessage()));
 
         }
     }
 
-    private int insertAt(int lineNum, boolean modify, String src)
-            throws CannotCompileException
-    {
+    private int insertAt(int lineNum, boolean modify, String src) throws CannotCompileException {
         CodeAttribute ca = ctMethod.getMethodInfo().getCodeAttribute();
         if (ca == null)
             throw new CannotCompileException("no method body");
 
-        LineNumberAttribute ainfo
-                = (LineNumberAttribute)ca.getAttribute(LineNumberAttribute.tag);
+        LineNumberAttribute ainfo = (LineNumberAttribute) ca.getAttribute(LineNumberAttribute.tag);
         if (ainfo == null)
             throw new CannotCompileException("no line number info");
 
@@ -151,13 +143,12 @@ public class TestMethod implements Cloneable {
             return lineNum;
 
         CtClass cc = declaringClass;
-//        cc.checkModify();
+        // cc.checkModify();
         CodeIterator iterator = ca.iterator();
         Javac jv = new Javac(cc);
         try {
             jv.recordLocalVariables(ca, index);
-            jv.recordParams(ctMethod.getParameterTypes(),
-                    Modifier.isStatic(ctMethod.getModifiers()));
+            jv.recordParams(ctMethod.getParameterTypes(), Modifier.isStatic(ctMethod.getModifiers()));
             jv.setMaxLocals(ca.getMaxLocals());
             jv.compileStmnt(src);
             Bytecode b = jv.getBytecode();
@@ -165,31 +156,28 @@ public class TestMethod implements Cloneable {
             int stack = b.getMaxStack();
             ca.setMaxLocals(locals);
 
-            /* We assume that there is no values in the operand stack
-             * at the position where the bytecode is inserted.
+            /*
+             * We assume that there is no values in the operand stack at the position where
+             * the bytecode is inserted.
              */
-//            if (stack > ca.getMaxStack())
-//                ca.setMaxStack(stack);
-
+            // if (stack > ca.getMaxStack())
+            // ca.setMaxStack(stack);
 
             /**
              * Added by us
              */
             int currentStackHeight = ca.getMaxStack();
-            ca.setMaxStack(stack+currentStackHeight);
+            ca.setMaxStack(stack + currentStackHeight);
 
             index = iterator.insertAt(index, b.get());
             iterator.insert(b.getExceptionTable(), index);
             ctMethod.getMethodInfo().rebuildStackMapIf6(cc.getClassPool(), cc.getClassFile2());
             return lineNum;
-        }
-        catch (NotFoundException e) {
+        } catch (NotFoundException e) {
             throw new CannotCompileException(e);
-        }
-        catch (CompileError e) {
+        } catch (CompileError e) {
             throw new CannotCompileException(e);
-        }
-        catch (BadBytecode e) {
+        } catch (BadBytecode e) {
             throw new CannotCompileException(e);
         }
     }
