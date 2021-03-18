@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.LineNumberAttribute;
+import javassist.bytecode.MethodInfo;
 import javassist.bytecode.analysis.ControlFlow;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestClass;
@@ -199,7 +201,10 @@ public class VocabularyStrategy implements Strategy {
         final Map<Integer, String> resultBody = new HashMap<>();
         final BufferedReader br = new BufferedReader(new FileReader(f));
         final List<String> sb = br.lines().collect(Collectors.toList());
-        final LineNumberAttribute ainfo = (LineNumberAttribute) method.getCtMethod().getMethodInfo().getCodeAttribute()
+        final Optional<CodeAttribute> codeAttribute = Optional.ofNullable(method.getCtMethod().getMethodInfo().getCodeAttribute());
+        if (!codeAttribute.isPresent())
+            return new HashMap<>();
+        final LineNumberAttribute ainfo = (LineNumberAttribute) codeAttribute.get()
                 .getAttribute(LineNumberAttribute.tag);
 
         for (ControlFlow.Block b : method.getBlocks()) {
