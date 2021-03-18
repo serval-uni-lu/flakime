@@ -202,10 +202,10 @@ public class VocabularyStrategy implements Strategy {
         final BufferedReader br = new BufferedReader(new FileReader(f));
         final List<String> sb = br.lines().collect(Collectors.toList());
 
-        //Use of optional because code attribute can be null, but checks is done at the TestMethod initialization so need more needs to check presence here
-        final Optional<CodeAttribute> codeAttribute = Optional.of(method.getCtMethod().getMethodInfo().getCodeAttribute());
-        final LineNumberAttribute ainfo = (LineNumberAttribute) codeAttribute.get()
-                .getAttribute(LineNumberAttribute.tag);
+        // Use of optional because code attribute can be null, but checks is done at the
+        // TestMethod initialization so need more needs to check presence here
+        final CodeAttribute codeAttribute = method.getCtMethod().getMethodInfo().getCodeAttribute();
+        final LineNumberAttribute ainfo = (LineNumberAttribute) codeAttribute.getAttribute(LineNumberAttribute.tag);
 
         for (ControlFlow.Block b : method.getBlocks()) {
             int length = b.length();// The ByteCode size of the Basic block

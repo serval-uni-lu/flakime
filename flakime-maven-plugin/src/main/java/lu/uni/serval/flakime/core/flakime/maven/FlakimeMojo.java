@@ -1,6 +1,7 @@
 package lu.uni.serval.flakime.core.flakime.maven;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import javassist.CannotCompileException;
@@ -32,7 +33,7 @@ public class FlakimeMojo extends AbstractMojo {
     String strategy;
 
     @Parameter(defaultValue = "0.05", property = "flakime.flakeRate")
-    float flakeRate;
+    String flakeRateString;
 
     @Parameter(property = "flakime.testAnnotations", required = true)
     Set<String> testAnnotations;
@@ -74,7 +75,8 @@ public class FlakimeMojo extends AbstractMojo {
             final MavenLogger mavenLogger = new MavenLogger(logger);
             final Project project = initializeProject(mavenProject, mavenLogger);
             strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
-
+            float flakeRate = Float
+                    .parseFloat(Optional.ofNullable(System.getenv("FLAKE_RATE")).orElse(flakeRateString));
             logger.info(String.format("Strategy %s loaded", strategyImpl.getClass().getName()));
             logger.info(String.format("FlakeRate: %f", flakeRate));
             logger.info(String.format("Found %d classes", project.getNumberClasses()));

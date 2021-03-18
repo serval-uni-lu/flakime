@@ -22,17 +22,16 @@ public class TestClass implements Iterable<TestMethod> {
     private final File outputDirectory;
     private List<TestMethod> testMethods;
 
-    public TestClass(Logger logger, Set<String> testAnnotations, CtClass ctClass, File sourceFile, File outputDirectory) {
+    public TestClass(Logger logger, Set<String> testAnnotations, CtClass ctClass, File sourceFile,
+            File outputDirectory) {
         this.logger = logger;
         this.testAnnotations = testAnnotations;
         this.ctClass = ctClass;
         this.sourceFile = sourceFile;
         this.outputDirectory = outputDirectory;
-        this.testMethods = Arrays.stream(ctClass.getDeclaredMethods())
-                .filter(tm -> this.isTest(tm) && tm.getMethodInfo().getCodeAttribute() != null)
-                .map(m -> TestMethodFactory.create(logger, m, sourceFile,this.ctClass))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        this.testMethods = Arrays.stream(ctClass.getDeclaredMethods()).filter(tm -> this.isTest(tm))
+                .map(m -> TestMethodFactory.create(logger, m, sourceFile, this.ctClass)).filter(Objects::nonNull)
+                .filter(tm -> tm.getCtMethod().getMethodInfo().getCodeAttribute() != null).collect(Collectors.toList());
 
     }
 
@@ -42,13 +41,13 @@ public class TestClass implements Iterable<TestMethod> {
     }
 
     @Override
-    public Iterator<TestMethod> iterator(){
-        return Arrays.stream(ctClass.getDeclaredMethods())
-                .filter(TestClass.this::isTest)
-                .map(m -> TestMethodFactory.create(logger, m, sourceFile,this.ctClass))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList())
-                .iterator();
+    public Iterator<TestMethod> iterator() {
+        return this.testMethods.iterator();
+        // return
+        // Arrays.stream(ctClass.getDeclaredMethods()).filter(TestClass.this::isTest)
+        // .map(m -> TestMethodFactory.create(logger, m, sourceFile,
+        // this.ctClass)).filter(Objects::nonNull)
+        // .collect(Collectors.toList()).iterator();
     }
 
     /**
@@ -59,9 +58,9 @@ public class TestClass implements Iterable<TestMethod> {
      */
     private boolean isTest(CtMethod m) {
         String runtimeAnnotation = "RuntimeVisibleAnnotations";
-        return m.getMethodInfo().getAttributes().stream().anyMatch(attributeInfo -> attributeInfo.getName().equals(runtimeAnnotation) &&
-                this.testAnnotations.contains(attributeInfo.toString())
-        );
+        return m.getMethodInfo().getAttributes().stream()
+                .anyMatch(attributeInfo -> attributeInfo.getName().equals(runtimeAnnotation)
+                        && this.testAnnotations.contains(attributeInfo.toString()));
 
     }
 
