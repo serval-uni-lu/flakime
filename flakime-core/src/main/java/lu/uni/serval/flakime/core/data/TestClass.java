@@ -29,7 +29,7 @@ public class TestClass implements Iterable<TestMethod> {
         this.sourceFile = sourceFile;
         this.outputDirectory = outputDirectory;
         this.testMethods = Arrays.stream(ctClass.getDeclaredMethods())
-                .filter(TestClass.this::isTest)
+                .filter(tm -> this.isTest(tm) && tm.getMethodInfo().getCodeAttribute() != null)
                 .map(m -> TestMethodFactory.create(logger, m, sourceFile,this.ctClass))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

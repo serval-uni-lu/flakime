@@ -201,9 +201,9 @@ public class VocabularyStrategy implements Strategy {
         final Map<Integer, String> resultBody = new HashMap<>();
         final BufferedReader br = new BufferedReader(new FileReader(f));
         final List<String> sb = br.lines().collect(Collectors.toList());
-        final Optional<CodeAttribute> codeAttribute = Optional.ofNullable(method.getCtMethod().getMethodInfo().getCodeAttribute());
-        if (!codeAttribute.isPresent())
-            return new HashMap<>();
+
+        //Use of optional because code attribute can be null, but checks is done at the TestMethod initialization so need more needs to check presence here
+        final Optional<CodeAttribute> codeAttribute = Optional.of(method.getCtMethod().getMethodInfo().getCodeAttribute());
         final LineNumberAttribute ainfo = (LineNumberAttribute) codeAttribute.get()
                 .getAttribute(LineNumberAttribute.tag);
 
