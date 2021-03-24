@@ -27,7 +27,7 @@ public class FlakimeInstrumenter {
      * @param flakeRate The flake rate
      * @throws CannotCompileException if the source code compilation Fails
      */
-    public static void instrument(TestMethod testMethod, Strategy strategy, File outputDir,String disableFlag,double flakeRate)
+    public static void instrument(TestMethod testMethod, Strategy strategy, File outputDir,String disableFlag,double flakeRate,boolean disableReport)
             throws CannotCompileException{
         testMethod.addLocalVariable(randomVariableName, CtClass.doubleType);
         testMethod.insertBefore(String.format("%s = Math.random();", randomVariableName));
@@ -38,7 +38,7 @@ public class FlakimeInstrumenter {
         double randomDouble = Math.random();
         Set<Integer> statementLineNumbers = testMethod.getStatementLineNumbers();
         for (int lineNumber : statementLineNumbers) {
-            final String payload = computePayload(testMethod, strategy, lineNumber,outputDir,flakeRate);
+            final String payload = computePayload(testMethod, strategy, lineNumber,outputDir,flakeRate,disableReport);
 //            System.out.println("Inserting #["+payload+"]#");
             testMethod.insertAt(lineNumber+1,payload);
         }
@@ -56,13 +56,15 @@ public class FlakimeInstrumenter {
      * @param lineNumber The line number corresponding to the execution statement
      * @return The effective source code string to be injected.
      */
-    private static String computePayload(TestMethod testMethod, Strategy strategy, int lineNumber,File outputDir,double flakeRate) {
+    private static String computePayload(TestMethod testMethod, Strategy strategy, int lineNumber,File outputDir,double flakeRate,boolean disableReport) {
         final StringBuilder result = new StringBuilder();
         double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber,flakeRate);
         String path = outputDir.getAbsolutePath().replace("\\","\\\\");
         outputDir.mkdir();
 
-        String fileWritterString = writeFileString(prettyName(testMethod.getName()),probability,path,lineNumber);
+        String fileWritterString = "";
+        if (!disableReport) fileWritterString = writeFileString(prettyName(testMethod.getName()),probability,path,lineNumber);
+
         String flakeCondition = flakeConditionString(probability);
 
         if (probability > 0) {

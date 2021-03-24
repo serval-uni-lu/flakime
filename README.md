@@ -24,6 +24,7 @@ The execution stage is set to `test-compile`.
 | tag                  | implementation & range                                 | default  | required | description                                                                    |
 |----------------------|--------------------------------------------------------|-----------------------|----------|--------------------------------------------------------------------------------|
 | `disableFlagName`    | string                                                 | FLAKIME_DISABLE       |          | The environment variable name of the flag disabling flakime   |
+| `disableReport`      | boolean                                                | false                 |          | Allows to disable the generation of output files reporting the flake point for each test methods
 | `flakeRate`          | float: 0..1                                            | 0.05                  |          | The threshold at which to consider a test with non-null probability to flake   |
 | `strategy`           | string: {vocabulary,bernoulli}                         | bernoulli             |          | The strategy with which the flakiness probability of a test will be calculated |
 | `testAnnotations`    | Array of string                                        |                       | Yes      | The Test annotations used in the test suite preceeded by `@`                   |
@@ -51,6 +52,7 @@ The execution stage is set to `test-compile`.
     <annotation>@org.junit.jupiter.api.Test</annotation>
     <annotation>@org.junit.Test</annotation>
   </testAnnotations>
+  <disableFlagName>$DISABLE_FLAG_NAME</disableFlagName>
   <strategyParameters>
     <trainModel>false</trainModel>
     <modelPath>rfc_classifier</modelPath>

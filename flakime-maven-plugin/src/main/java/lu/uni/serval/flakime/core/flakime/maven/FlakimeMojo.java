@@ -32,6 +32,9 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "bernoulli", property = "flakime.strategy")
     String strategy;
 
+    @Parameter(defaultValue = "false",property = "flakime.disableReport")
+    boolean disableReport;
+
     @Parameter(defaultValue = "0.05", property = "flakime.flakeRate")
     String flakeRateString;
 
@@ -86,7 +89,6 @@ public class FlakimeMojo extends AbstractMojo {
 
             for (TestClass testClass : project) {
                 logger.debug(String.format("Process class %s", testClass.getName()));
-                // TODO inject new method
                 for (TestMethod testMethod : testClass) {
                     logger.debug(String.format("\tProcess method %s", testMethod.getName()));
 
@@ -95,7 +97,7 @@ public class FlakimeMojo extends AbstractMojo {
                         // logger.info(String.format("\tProbability of %s: %f", testMethod.getName(),
                         // probability));
                         FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
-                                flakeRate);
+                                flakeRate,disableReport);
                     } catch (Exception e) {
                         logger.warn(String.format("Failed to instrument method %s: %s", testMethod.getName(),
                                 e.getMessage()));
