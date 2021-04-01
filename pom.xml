@@ -9,6 +9,7 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
 <!--        <target.dir>../target</target.dir>-->
+        <sonar.projectKey>flakime</sonar.projectKey>
         <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
         <sonar.organization>deploy-serval-snt</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
