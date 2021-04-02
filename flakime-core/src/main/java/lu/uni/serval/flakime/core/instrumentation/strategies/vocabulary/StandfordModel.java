@@ -7,7 +7,6 @@ import edu.stanford.nlp.ling.BasicDatum;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import lu.uni.serval.flakime.core.utils.Logger;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.List;
 import java.util.Properties;

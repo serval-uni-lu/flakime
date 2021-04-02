@@ -105,7 +105,7 @@ public class VocabularyStrategy implements Strategy {
             testFlakinessProbability = this.model.computeProbability(completeBody); // 0.15
             computeStatementProbability(test, testFlakinessProbability);
         } catch (NullPointerException npe) {
-            npe.printStackTrace();
+            logger.error("Null pointer exception, setting test flakiness probability to 0");
             testFlakinessProbability = 0.0;
         } catch (Exception e) {
             this.logger.error(String.format("Failed to compute test probability, default to 0.0 for test '%s': %s",
