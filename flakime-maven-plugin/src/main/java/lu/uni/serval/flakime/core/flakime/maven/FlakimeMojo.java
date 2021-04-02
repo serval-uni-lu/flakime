@@ -56,13 +56,16 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "FLAKIME_DISABLE", property = "flakime.disableFlag")
     private String disableFlagName;
 
+    @Parameter(defaultValue = "false",property = "flakime.skip")
+    private boolean skip;
+
     /**
      * Plugin mojo entry point. The method iterates over all test-classes contained
      * in the project. For each of the test classes the method iterates over all the
      * test method (annotated by @test). Finally the method calculates the flakiness
      * probability of the given test method following the given strategy. If the
      * test flakiness probability is greater than the flakerate, the test method is
-     * intrumented. Otherwise the test method is skipped.
+     * instrumented. Otherwise the test method is skipped.
      *
      *
      * @throws MojoExecutionException Thrown if any of the steps throws an exception
@@ -74,6 +77,7 @@ public class FlakimeMojo extends AbstractMojo {
         Strategy strategyImpl = null;
         Log logger = getLog();
 
+        if(!skip)
         try {
             final MavenLogger mavenLogger = new MavenLogger(logger);
             final Project project = initializeProject(mavenProject, mavenLogger);
