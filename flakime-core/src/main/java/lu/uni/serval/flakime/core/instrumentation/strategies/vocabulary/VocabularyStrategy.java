@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.LineNumberAttribute;
-import javassist.bytecode.MethodInfo;
 import javassist.bytecode.analysis.ControlFlow;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestClass;
@@ -30,7 +29,7 @@ public class VocabularyStrategy implements Strategy {
     private String pathToModel;
     private boolean trainModel;
     private Map<Integer, Double> probabilitiesPerStatement;
-    private final Model.Implementation modelImplementation = Model.Implementation.WEKA;
+    private final static Model.Implementation MODEL_IMPLEMENTATION = Model.Implementation.WEKA;
 
     public VocabularyStrategy(Logger logger) {
         this.logger = logger;
@@ -58,12 +57,12 @@ public class VocabularyStrategy implements Strategy {
         }
 
         if (trainModel) {
-            this.model = ModelFactory.create(this.modelImplementation, this.logger, this.nTrees, this.nThreads);
+            this.model = ModelFactory.create(this.MODEL_IMPLEMENTATION, this.logger, this.nTrees, this.nThreads);
             this.model.setData(trainingData, additionalTrainingText);
             this.model.train();
             this.model.save(this.pathToModel);
         } else {
-            this.model = ModelFactory.load(this.modelImplementation, this.logger, this.pathToModel);
+            this.model = ModelFactory.load(this.MODEL_IMPLEMENTATION, this.logger, this.pathToModel);
             this.model.setData(trainingData, additionalTrainingText);
         }
     }
@@ -78,11 +77,7 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public double getTestFlakinessProbability(TestMethod test, int lineNumber, double flakeRate) {
-        double probability = Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0)
-                * flakeRate;
-        // logger.info(String.format("[Test: %s][line: %d][proba:
-        // %.3f]",test.getName(),lineNumber,probability));
-        return probability;
+        return Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0) * flakeRate;
     }
 
     /**
@@ -103,7 +98,9 @@ public class VocabularyStrategy implements Strategy {
                 return 0.0;
             }
 
-            final String completeBody = methodBodyText.values().stream().reduce((a, b) -> a + " " + b).get();
+            final String completeBody;
+            Optional<String> completeBodyOptional = methodBodyText.values().stream().reduce((a, b) -> a + " " + b);
+            completeBody = completeBodyOptional.orElse("");
 
             testFlakinessProbability = this.model.computeProbability(completeBody); // 0.15
             computeStatementProbability(test, testFlakinessProbability);
@@ -150,16 +147,19 @@ public class VocabularyStrategy implements Strategy {
         for (Integer statementNum : test.getStatementLineNumbers()) {
             double unNormalizedP = this.probabilitiesPerStatement.get(statementNum); // proba de flakiness until
                                                                                      // linenumber
-            double statementPnormalized = unNormalizedP / totalProbabilities; // Proportion of the block proba wrt
-                                                                              // overall sum of proba
-            aggregateProbability += statementPnormalized;
+
+            double statementProbabilityNormalized = 0.0; // Proportion of the block proba wrt
+            if(totalProbabilities != 0)
+                statementProbabilityNormalized = unNormalizedP / totalProbabilities;
+            // overall sum of proba
+            aggregateProbability += statementProbabilityNormalized;
             this.probabilitiesPerStatement.put(statementNum, aggregateProbability * testProbability);
         }
     }
 
     @Override
     public void postProcess() {
-
+        throw new UnsupportedOperationException("Vocabulary strategy postProcess() not implemented");
     }
 
     /**
@@ -176,12 +176,11 @@ public class VocabularyStrategy implements Strategy {
     public String getTextBodyToLine(Map<Integer, String> methodBodyText, int lineNumber) {
         final StringBuilder sb = new StringBuilder();
 
-        for (Integer currentLine : methodBodyText.keySet()) {
-            if (currentLine > lineNumber) {
+        for (Map.Entry<Integer,String> entry : methodBodyText.entrySet()) {
+            if (entry.getKey() > lineNumber) {
                 break;
             }
-
-            sb.append(methodBodyText.get(currentLine)).append(" ");
+            sb.append(entry.getValue()).append(" ");
         }
 
         return sb.toString();
@@ -199,8 +198,11 @@ public class VocabularyStrategy implements Strategy {
      */
     public Map<Integer, String> getTestMethodBodyText(File f, TestMethod method) throws IOException {
         final Map<Integer, String> resultBody = new HashMap<>();
-        final BufferedReader br = new BufferedReader(new FileReader(f));
-        final List<String> sb = br.lines().collect(Collectors.toList());
+        final List<String> sb;
+
+        try(BufferedReader br = new BufferedReader(new FileReader(f))){
+            sb = br.lines().collect(Collectors.toList());
+        }
 
         // Use of optional because code attribute can be null, but checks is done at the
         // TestMethod initialization so need more needs to check presence here

@@ -17,7 +17,6 @@ import lu.uni.serval.flakime.core.utils.Logger;
  */
 public class BernoulliStrategy implements Strategy {
     private final Logger logger;
-    private double flakinessProbability;
 
     public BernoulliStrategy(Logger logger) {
         this.logger = logger;
@@ -25,7 +24,7 @@ public class BernoulliStrategy implements Strategy {
 
     @Override
     public void preProcess(Project p) {
-        this.flakinessProbability = .005;
+        //No preprocess needed.
     }
 
     @Override
@@ -37,8 +36,6 @@ public class BernoulliStrategy implements Strategy {
 
         double proportion = (double)executedLine/numberOfLines;
         logger.info(String.format("[%s][total: %d][executed: %d]",test.getName(),numberOfLines,executedLine));
-        double testProbability = getTestFlakinessProbability(test,flakeRate);
-        double statementProbability = getStatementFlakinessProbability(test, lineNumber,flakeRate);
 
         return proportion * flakeRate;
     }
@@ -46,25 +43,11 @@ public class BernoulliStrategy implements Strategy {
     @Override
     public double getTestFlakinessProbability(TestMethod test,double flakeRate) {
         return flakeRate;
-//        int numberOfStatement = test.getStatementLineNumbers().size();
-//        double probabilityOfNotFlaking = 1 - this.flakinessProbability;
-//        return 1 - Math.pow(probabilityOfNotFlaking, numberOfStatement);
     }
 
 
     @Override
     public void postProcess() {
-
-    }
-
-    private double getStatementFlakinessProbability(TestMethod test, int lineNumber,double flakeRate) {
-
-        int numberOfStatementExecuted = 1 + test.getStatementLineNumbers()
-                .stream()
-                .filter(line -> line < lineNumber)
-                .toArray().length;
-
-        double probabilityOfNotFlaking = 1 - this.flakinessProbability;
-        return 1 - Math.pow(probabilityOfNotFlaking, numberOfStatementExecuted);
+        throw new UnsupportedOperationException("postProcess of bernoulli strategy not implemented");
     }
 }

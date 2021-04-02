@@ -25,7 +25,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class InstrumenterTest {
+class InstrumenterTest {
 
     private static Project PROJECT;
     static lu.uni.serval.flakime.core.utils.Logger logger = new lu.uni.serval.flakime.core.utils.Logger() {
@@ -69,7 +69,7 @@ public class InstrumenterTest {
 
     @Test
     void projectLoadTest(){
-        assertEquals(PROJECT.getClassNames().size(), 4);
+        assertEquals(4,PROJECT.getClassNames().size());
     }
 
     @Test

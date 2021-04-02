@@ -43,20 +43,6 @@
                         <dependency>lu.uni.serval:flakime-maven-plugin</dependency>
                     </mojoDependencies>
                 </configuration>
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>mojo-descriptor</id>-->
-<!--                        <goals>-->
-<!--                            <goal>descriptor</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                    <execution>-->
-<!--                        <id>help-goal</id>-->
-<!--                        <goals>-->
-<!--                            <goal>helpmojo</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
             </plugin>
 
             <plugin>

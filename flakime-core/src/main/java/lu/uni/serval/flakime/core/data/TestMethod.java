@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
-import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.BadBytecode;
@@ -24,17 +23,13 @@ import lu.uni.serval.flakime.core.utils.Logger;
  * This class represent a Test method holding all information about the targeted
  * (test) method to be transformed
  */
-public class TestMethod implements Cloneable {
+public class TestMethod {
     private final Logger logger;
-    private CtMethod ctMethod;
-    private ControlFlow controlFlow;
+    private final CtMethod ctMethod;
+    private final ControlFlow controlFlow;
     private final File sourceCodeFile;
-    private CtClass declaringClass;
-    private Set<Integer> statementLineNumbers;
-
-    public Object clone() throws CloneNotSupportedException {
-        return super.clone();
-    }
+    private final CtClass declaringClass;
+    private final Set<Integer> statementLineNumbers;
 
     public ControlFlow.Block[] getBlocks() {
         return controlFlow.basicBlocks();
@@ -47,6 +42,7 @@ public class TestMethod implements Cloneable {
      * @param ctMethod   Instance of javassist {@code CtMethod.class}
      * @param sourceCode Instance of {@code File.class} pointing the method source
      *                   files
+     * @param declaringClass The declaringClass fo this test mehtod
      * @throws BadBytecode Thrown if the bytecode is malformed
      */
     public TestMethod(Logger logger, CtMethod ctMethod, File sourceCode, CtClass declaringClass) throws BadBytecode {
@@ -109,9 +105,8 @@ public class TestMethod implements Cloneable {
      * @param payload    The source code to insert
      *
      *
-     * @throws CannotCompileException if the Compilation of source code fails
      */
-    public void insertAt(int lineNumber, String payload) throws CannotCompileException {
+    public void insertAt(int lineNumber, String payload) {
 
         try {
             logger.debug(String.format("[%s][lineNumber: %d]", this.getName(), lineNumber));
@@ -127,7 +122,7 @@ public class TestMethod implements Cloneable {
         }
     }
 
-    private int insertAt(int lineNum, boolean modify, String src) throws CannotCompileException {
+    private void insertAt(int lineNum, boolean modify, String src) throws CannotCompileException {
         CodeAttribute ca = ctMethod.getMethodInfo().getCodeAttribute();
         if (ca == null)
             throw new CannotCompileException("no method body");
@@ -137,13 +132,11 @@ public class TestMethod implements Cloneable {
             throw new CannotCompileException("no line number info");
 
         LineNumberAttribute.Pc pc = ainfo.toNearPc(lineNum);
-        lineNum = pc.line;
         int index = pc.index;
         if (!modify)
-            return lineNum;
+            return;
 
         CtClass cc = declaringClass;
-        // cc.checkModify();
         CodeIterator iterator = ca.iterator();
         Javac jv = new Javac(cc);
         try {
@@ -163,7 +156,7 @@ public class TestMethod implements Cloneable {
             // if (stack > ca.getMaxStack())
             // ca.setMaxStack(stack);
 
-            /**
+            /*
              * Added by us
              */
             int currentStackHeight = ca.getMaxStack();
@@ -172,12 +165,7 @@ public class TestMethod implements Cloneable {
             index = iterator.insertAt(index, b.get());
             iterator.insert(b.getExceptionTable(), index);
             ctMethod.getMethodInfo().rebuildStackMapIf6(cc.getClassPool(), cc.getClassFile2());
-            return lineNum;
-        } catch (NotFoundException e) {
-            throw new CannotCompileException(e);
-        } catch (CompileError e) {
-            throw new CannotCompileException(e);
-        } catch (BadBytecode e) {
+        } catch (NotFoundException | CompileError | BadBytecode e) {
             throw new CannotCompileException(e);
         }
     }

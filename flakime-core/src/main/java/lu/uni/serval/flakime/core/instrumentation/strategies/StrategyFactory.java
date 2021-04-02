@@ -10,6 +10,12 @@ import java.io.FileNotFoundException;
 import java.util.Properties;
 
 public class StrategyFactory {
+
+    private StrategyFactory() throws IllegalAccessException {
+        throw new IllegalAccessException("Strategy Factory should not be instantiated");
+    }
+
+
     /**
      * Factory pattern implementation. Returns the strategy instance from the corresponding type.
      *
@@ -33,11 +39,8 @@ public class StrategyFactory {
             String pathModel = "";
 
             pathModel = Optional.ofNullable(properties.getProperty("modelPath")).orElse("rfc_classifier");
-            if(!trainModel){
-
-                if(!new File(pathModel).exists()){
-                    throw new FileNotFoundException(String.format("Cannot find modelPath set at '%s'", pathModel));
-                }
+            if(!trainModel && !new File(pathModel).exists()){
+                throw new FileNotFoundException(String.format("Cannot find modelPath set at '%s'", pathModel));
             }
 
             final VocabularyStrategy strategy = new VocabularyStrategy(logger);

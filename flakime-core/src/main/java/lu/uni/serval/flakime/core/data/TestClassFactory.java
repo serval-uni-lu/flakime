@@ -9,6 +9,11 @@ import java.io.File;
 import java.util.Set;
 
 public class TestClassFactory {
+
+    private TestClassFactory() throws IllegalAccessException {
+        throw new IllegalAccessException("TestClassFactory should not be instantiated");
+    }
+
     public static TestClass create(Logger logger, Set<String> testAnnotations, String className, ClassPool classPool, File sourceFile, File outputDirectory) {
         try {
             classPool.importPackage(className);

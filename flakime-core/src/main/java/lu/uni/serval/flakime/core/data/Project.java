@@ -41,20 +41,6 @@ public class Project implements Iterable<TestClass> {
         return getClassNames().size();
     }
 
-    public static void main2(){
-        List<Integer> list = new ArrayList<>();
-        list.add(1);
-        list.add(2);
-        list.add(3);
-
-        Long count = list.stream().filter(n -> n == 1).count();
-
-
-
-    }
-
-
-
     @Override
     public Iterator<TestClass> iterator(){
         return getClassNames().stream()

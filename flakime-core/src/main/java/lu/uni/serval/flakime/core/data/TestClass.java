@@ -18,18 +18,16 @@ public class TestClass implements Iterable<TestMethod> {
     private final Logger logger;
     private final Set<String> testAnnotations;
     private final CtClass ctClass;
-    private final File sourceFile;
     private final File outputDirectory;
-    private List<TestMethod> testMethods;
+    private final List<TestMethod> testMethods;
 
     public TestClass(Logger logger, Set<String> testAnnotations, CtClass ctClass, File sourceFile,
             File outputDirectory) {
         this.logger = logger;
         this.testAnnotations = testAnnotations;
         this.ctClass = ctClass;
-        this.sourceFile = sourceFile;
         this.outputDirectory = outputDirectory;
-        this.testMethods = Arrays.stream(ctClass.getDeclaredMethods()).filter(tm -> this.isTest(tm))
+        this.testMethods = Arrays.stream(ctClass.getDeclaredMethods()).filter(this::isTest)
                 .map(m -> TestMethodFactory.create(logger, m, sourceFile, this.ctClass)).filter(Objects::nonNull)
                 .filter(tm -> tm.getCtMethod().getMethodInfo().getCodeAttribute() != null).collect(Collectors.toList());
 
@@ -43,11 +41,6 @@ public class TestClass implements Iterable<TestMethod> {
     @Override
     public Iterator<TestMethod> iterator() {
         return this.testMethods.iterator();
-        // return
-        // Arrays.stream(ctClass.getDeclaredMethods()).filter(TestClass.this::isTest)
-        // .map(m -> TestMethodFactory.create(logger, m, sourceFile,
-        // this.ctClass)).filter(Objects::nonNull)
-        // .collect(Collectors.toList()).iterator();
     }
 
     /**

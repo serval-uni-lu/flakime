@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.Set;
 import javassist.CannotCompileException;
 import javassist.CtClass;
-import javassist.bytecode.BadBytecode;
 import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
 import lu.uni.serval.flakime.core.data.TestMethod;
 
@@ -13,8 +12,13 @@ import lu.uni.serval.flakime.core.data.TestMethod;
  * Executor to perform transformation.
  */
 public class FlakimeInstrumenter {
-    private static final String randomVariableName = "__FLAKIME_RANDOM_VARIABLE__" + Instant.now().getEpochSecond();
-    private static final String flakimeDisableFlag = "__FLAKIME_DISABLE_FLAG__";
+
+    private FlakimeInstrumenter() throws IllegalAccessException {
+        throw new IllegalAccessException("FlakimeInstrumenter should not be instantiated");
+    }
+
+    private static final String RANDOM_VARIABLE_NAME = "__FLAKIME_RANDOM_VARIABLE__" + Instant.now().getEpochSecond();
+    private static final String FLAKIME_DISABLE_FLAG = "__FLAKIME_DISABLE_FLAG__";
 
 
     /**
@@ -25,21 +29,20 @@ public class FlakimeInstrumenter {
      * @param outputDir The directory where the flake position report file will be written
      * @param disableFlag The environment variable name that control if the flake will occur
      * @param flakeRate The flake rate
+     * @param disableReport flag to disable report or not.
      * @throws CannotCompileException if the source code compilation Fails
      */
     public static void instrument(TestMethod testMethod, Strategy strategy, File outputDir,String disableFlag,double flakeRate,boolean disableReport)
             throws CannotCompileException{
-        testMethod.addLocalVariable(randomVariableName, CtClass.doubleType);
-        testMethod.insertBefore(String.format("%s = Math.random();", randomVariableName));
+        testMethod.addLocalVariable(RANDOM_VARIABLE_NAME, CtClass.doubleType);
+        testMethod.insertBefore(String.format("%s = Math.random();", RANDOM_VARIABLE_NAME));
 
-        testMethod.addLocalVariable(flakimeDisableFlag, CtClass.booleanType);
-        testMethod.insertBefore(String.format("%s = Boolean.parseBoolean(System.getenv(\"%s\"));", flakimeDisableFlag,disableFlag));
+        testMethod.addLocalVariable(FLAKIME_DISABLE_FLAG, CtClass.booleanType);
+        testMethod.insertBefore(String.format("%s = Boolean.parseBoolean(System.getenv(\"%s\"));", FLAKIME_DISABLE_FLAG,disableFlag));
 
-        double randomDouble = Math.random();
         Set<Integer> statementLineNumbers = testMethod.getStatementLineNumbers();
         for (int lineNumber : statementLineNumbers) {
             final String payload = computePayload(testMethod, strategy, lineNumber,outputDir,flakeRate,disableReport);
-//            System.out.println("Inserting #["+payload+"]#");
             testMethod.insertAt(lineNumber+1,payload);
         }
     }
@@ -83,8 +86,7 @@ public class FlakimeInstrumenter {
     }
 
     private static String flakeConditionString(double probability){
-        String s = String.format("(!%s) && (%s < %f)",flakimeDisableFlag,randomVariableName,probability);
-        return s;
+       return String.format("(!%s) && (%s < %f)", FLAKIME_DISABLE_FLAG, RANDOM_VARIABLE_NAME,probability);
     }
 
     private static String writeFileString(String methodName,double probability,String path,int lineNumber){
@@ -96,54 +98,10 @@ public class FlakimeInstrumenter {
         result.append(declaration);
         result.append("\n");
         result.append("fw.write(");
-        String filePayload = String.format("String.valueOf(%s)+\",%d,%.2f\\n\"","System.currentTimeMillis()",lineNumber,probability);
+        String filePayload = String.format("String.valueOf(%s)+\",%d,%.2f%n\"","System.currentTimeMillis()",lineNumber,probability);
         result.append(filePayload).append(");");
         result.append("\n");
         result.append("fw.close();");
         return result.toString();
     }
-
-//    private static String computePayload_2(TestMethod testMethod, Strategy strategy, int lineNumber,double randomDouble) {
-//        final StringBuilder result = new StringBuilder();
-//        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
-//
-//        if (probability > 0) {
-//            result.append("{if(!")
-//                    .append("Boolean.parseBoolean(System.getenv(\"FLAKIME_DISABLE\"))")
-//                    .append(" && (")
-//                    .append(randomDouble)
-//                    .append("<")
-//                    .append(probability)
-//                    .append("))")
-//                    .append("{")
-//                    .append("{")
-//                    .append("java.io.FileWriter fw = new java.io.FileWriter(\" output__"+testMethod.getName()+".out \",true);")
-//                    .append("fw.write(\"Flaked HERE:["+testMethod.getName()+"]["+lineNumber+"]["+probability+"]\\n\");")
-//                    .append("fw.close();")
-//                    .append("}")
-//                    .append("System.err.println(\"flakked\")")
-//                    .append("")
-//                    .append("")
-//                    .append(";}}");
-//        }
-//
-//        return result.toString();
-//    }
-//
-//    private static String computePayload_3(TestMethod testMethod, Strategy strategy, int lineNumber,double randomDouble) {
-//        final StringBuilder result = new StringBuilder();
-//        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber);
-//
-//        if (probability > 0) {
-//            result
-//
-//                    .append(";{")
-////                    .append("Object flakime = null;")
-//                    .append("System.err.println(\"Testhere "+lineNumber+"\");")
-//                    .append("}");
-//
-//        }
-//
-//        return result.toString();
-//    }
 }

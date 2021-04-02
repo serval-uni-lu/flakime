@@ -8,6 +8,11 @@ import lu.uni.serval.flakime.core.utils.Logger;
 import java.io.File;
 
 public class TestMethodFactory {
+
+    private TestMethodFactory() throws IllegalAccessException {
+        throw new IllegalAccessException("TestMethodFactory should not be instantiated");
+    }
+
     public static TestMethod create(Logger logger, CtMethod ctMethod, File sourceFile, CtClass declaringClass) {
         try {
             return new TestMethod(logger, ctMethod, sourceFile,declaringClass);

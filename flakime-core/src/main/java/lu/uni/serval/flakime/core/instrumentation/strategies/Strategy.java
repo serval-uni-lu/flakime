@@ -23,13 +23,14 @@ public interface Strategy {
      *
      * @param test The enclosing test method
      * @param lineNumber The statement line number
+     * @param flakeRate the flakeRate Value influencing the probability of test to actually flake.
      * @return The double value representing the probability of the statement being flaky.
      */
     double getTestFlakinessProbability(TestMethod test, int lineNumber,double flakeRate);
 
     /**
      * Method that computes the overall test flakiness probability.
-     *
+     * @param flakeRate the flakeRate Value influencing the probability of test to actually flake.
      * @param test The test method on which the probability is calculated
      * @return The double value representing the probability of the test being flaky
      */

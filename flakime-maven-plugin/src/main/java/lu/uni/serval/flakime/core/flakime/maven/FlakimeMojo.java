@@ -1,18 +1,13 @@
 package lu.uni.serval.flakime.core.flakime.maven;
 
-import java.io.File;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import javassist.CannotCompileException;
 import javassist.NotFoundException;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestClass;
 import lu.uni.serval.flakime.core.data.TestMethod;
+import lu.uni.serval.flakime.core.flakime.maven.utils.MavenLogger;
 import lu.uni.serval.flakime.core.instrumentation.FlakimeInstrumenter;
 import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
 import lu.uni.serval.flakime.core.instrumentation.strategies.StrategyFactory;
-import lu.uni.serval.flakime.core.flakime.maven.utils.MavenLogger;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -22,6 +17,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+
+import java.io.File;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
 
 @Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.TEST_COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
@@ -78,48 +78,46 @@ public class FlakimeMojo extends AbstractMojo {
         Log logger = getLog();
 
         if(!skip)
-        try {
-            final MavenLogger mavenLogger = new MavenLogger(logger);
-            final Project project = initializeProject(mavenProject, mavenLogger);
-            strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
-            float flakeRate = Float
-                    .parseFloat(Optional.ofNullable(System.getenv("FLAKE_RATE")).orElse(flakeRateString));
-            logger.info(String.format("Strategy %s loaded", strategyImpl.getClass().getName()));
-            logger.info(String.format("FlakeRate: %f", flakeRate));
-            logger.info(String.format("Found %d classes", project.getNumberClasses()));
-            logger.debug(String.format("Running preProcess of %s", strategyImpl.getClass().getSimpleName()));
+            try {
+                final MavenLogger mavenLogger = new MavenLogger(logger);
+                final Project project = initializeProject(mavenProject, mavenLogger);
+                strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
+                float flakeRate = Float
+                        .parseFloat(Optional.ofNullable(System.getenv("FLAKE_RATE")).orElse(flakeRateString));
+                logger.info(String.format("Strategy %s loaded", strategyImpl.getClass().getName()));
+                logger.info(String.format("FlakeRate: %f", flakeRate));
+                logger.info(String.format("Found %d classes", project.getNumberClasses()));
+                logger.debug(String.format("Running preProcess of %s", strategyImpl.getClass().getSimpleName()));
 
-            strategyImpl.preProcess(project);
+                strategyImpl.preProcess(project);
 
-            for (TestClass testClass : project) {
-                logger.debug(String.format("Process class %s", testClass.getName()));
-                for (TestMethod testMethod : testClass) {
-                    logger.debug(String.format("\tProcess method %s", testMethod.getName()));
-
-                    try {
-                        double probability = strategyImpl.getTestFlakinessProbability(testMethod, flakeRate);
-                        // logger.info(String.format("\tProbability of %s: %f", testMethod.getName(),
-                        // probability));
-                        FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
+                for (TestClass testClass : project) {
+                    logger.debug(String.format("Process class %s", testClass.getName()));
+                    for (TestMethod testMethod : testClass) {
+                        logger.debug(String.format("\tProcess method %s", testMethod.getName()));
+                        instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
                                 flakeRate,disableReport);
-                    } catch (Exception e) {
-                        logger.warn(String.format("Failed to instrument method %s: %s", testMethod.getName(),
-                                e.getMessage()));
                     }
+                    testClass.write();
                 }
-
-                testClass.write();
+            } catch (final Exception e) {
+                logger.error(e.getMessage(), e);
+                throw new MojoExecutionException(e.getMessage(), e);
+            } finally {
+                if (strategyImpl != null) {
+                    strategyImpl.postProcess();
+                }
             }
-        } catch (final Exception e) {
-            logger.error(e.getMessage(), e);
-            throw new MojoExecutionException(e.getMessage(), e);
-        } finally {
-            if (strategyImpl != null) {
-                strategyImpl.postProcess();
-            }
+    }
+    private void instrument(TestMethod testMethod,Strategy strategyImpl,File outputDirectory,String disableFlagName, float flakeRate,boolean disableReport){
+        try{
+            FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
+                    flakeRate,disableReport);
+        }catch (Exception e){
+            getLog().warn(String.format("Failed to instrument method %s: %s", testMethod.getName(),
+                    e.getMessage()));
         }
     }
-
     /**
      * This method parse the {@code Maven project} into a {@code Project}
      *

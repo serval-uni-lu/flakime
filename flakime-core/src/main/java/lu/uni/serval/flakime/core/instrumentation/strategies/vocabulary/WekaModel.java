@@ -82,8 +82,6 @@ public class WekaModel implements Model{
         this.randomForest.buildClassifier(trainingInstances);
         this.trainNeededFlag = false;
         long endTime = System.nanoTime();
-
-        System.out.println();
         this.logger.info(String.format("Random Forest Classifier trained in %.1f seconds",
                 (float)(endTime - startTime) / 1000000000
         ));
@@ -129,8 +127,15 @@ public class WekaModel implements Model{
      */
     public static Model load(Logger logger, String path) throws Exception {
         //FIXME stackoverflow error is thrown if the stack size is to low (must be manually set by -Xss10m)
-        final RandomForest randomForest = (RandomForest) SerializationHelper.read(path);
-        return new WekaModel(logger, randomForest);
+        final RandomForest randomForest;
+        try{
+            randomForest = (RandomForest) SerializationHelper.read(path);
+            return new WekaModel(logger, randomForest);
+        }catch (StackOverflowError stackOverflowError){
+            logger.error("Stackoverflow due to insufficient stack size, please increment with -Xss10m");
+            throw new Exception(stackOverflowError);
+        }
+
     }
 
     /**
@@ -212,8 +217,8 @@ public class WekaModel implements Model{
      */
     private KerasTokenizer createTokenizer(String[] trainingVocabulary, String[] additonalVocabulary) {
         String[] concat = ArrayUtils.addAll(trainingVocabulary, additonalVocabulary);
-        KerasTokenizer tokenizer = new KerasTokenizer();
-        tokenizer.fitOnTexts(concat);
-        return tokenizer;
+        KerasTokenizer kerasTokenizer = new KerasTokenizer();
+        kerasTokenizer.fitOnTexts(concat);
+        return kerasTokenizer;
     }
 }
