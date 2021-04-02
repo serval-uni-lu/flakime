@@ -153,8 +153,7 @@ public class TestMethod {
              * We assume that there is no values in the operand stack at the position where
              * the bytecode is inserted.
              */
-            // if (stack > ca.getMaxStack())
-            // ca.setMaxStack(stack);
+
 
             /*
              * Added by us

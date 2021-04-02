@@ -7,6 +7,7 @@ import edu.stanford.nlp.ling.BasicDatum;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import lu.uni.serval.flakime.core.utils.Logger;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.List;
 import java.util.Properties;
@@ -62,7 +63,7 @@ public class StandfordModel implements Model{
 
     @Override
     public void save(String path) {
-
+        throw new UnsupportedOperationException("Standford Model save is not available");
     }
 
     private List<String> getTokens(String text){

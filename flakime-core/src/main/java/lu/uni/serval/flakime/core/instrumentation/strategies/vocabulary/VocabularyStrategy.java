@@ -29,7 +29,7 @@ public class VocabularyStrategy implements Strategy {
     private String pathToModel;
     private boolean trainModel;
     private Map<Integer, Double> probabilitiesPerStatement;
-    private final static Model.Implementation MODEL_IMPLEMENTATION = Model.Implementation.WEKA;
+    private static final Model.Implementation MODEL_IMPLEMENTATION = Model.Implementation.WEKA;
 
     public VocabularyStrategy(Logger logger) {
         this.logger = logger;
@@ -57,12 +57,12 @@ public class VocabularyStrategy implements Strategy {
         }
 
         if (trainModel) {
-            this.model = ModelFactory.create(this.MODEL_IMPLEMENTATION, this.logger, this.nTrees, this.nThreads);
+            this.model = ModelFactory.create(MODEL_IMPLEMENTATION, this.logger, this.nTrees, this.nThreads);
             this.model.setData(trainingData, additionalTrainingText);
             this.model.train();
             this.model.save(this.pathToModel);
         } else {
-            this.model = ModelFactory.load(this.MODEL_IMPLEMENTATION, this.logger, this.pathToModel);
+            this.model = ModelFactory.load(MODEL_IMPLEMENTATION, this.logger, this.pathToModel);
             this.model.setData(trainingData, additionalTrainingText);
         }
     }

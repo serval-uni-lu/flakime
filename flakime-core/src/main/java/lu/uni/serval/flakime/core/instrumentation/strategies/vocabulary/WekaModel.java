@@ -7,6 +7,7 @@ import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;
 import weka.classifiers.trees.RandomForest;
 import weka.core.*;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -126,14 +127,13 @@ public class WekaModel implements Model{
      * @throws Exception Thrown if the random forest can not be deserialized.
      */
     public static Model load(Logger logger, String path) throws Exception {
-        //FIXME stackoverflow error is thrown if the stack size is to low (must be manually set by -Xss10m)
         final RandomForest randomForest;
         try{
             randomForest = (RandomForest) SerializationHelper.read(path);
             return new WekaModel(logger, randomForest);
         }catch (StackOverflowError stackOverflowError){
             logger.error("Stackoverflow due to insufficient stack size, please increment with -Xss10m");
-            throw new Exception(stackOverflowError);
+            throw new IOException(stackOverflowError);
         }
 
     }
