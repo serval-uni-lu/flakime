@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class TestClass implements Iterable<TestMethod> {
@@ -20,6 +22,7 @@ public class TestClass implements Iterable<TestMethod> {
     private final CtClass ctClass;
     private final File outputDirectory;
     private final List<TestMethod> testMethods;
+    private int nTestMethods = 0;
 
     public TestClass(Logger logger, Set<String> testAnnotations, CtClass ctClass, File sourceFile,
             File outputDirectory) {
@@ -30,6 +33,8 @@ public class TestClass implements Iterable<TestMethod> {
         this.testMethods = Arrays.stream(ctClass.getDeclaredMethods()).filter(this::isTest)
                 .map(m -> TestMethodFactory.create(logger, m, sourceFile, this.ctClass)).filter(Objects::nonNull)
                 .filter(tm -> tm.getCtMethod().getMethodInfo().getCodeAttribute() != null).collect(Collectors.toList());
+
+        nTestMethods = this.testMethods.size();
 
     }
 
@@ -50,6 +55,13 @@ public class TestClass implements Iterable<TestMethod> {
      * @return True if the method annotation is in {@code testAnnotations}
      */
     private boolean isTest(CtMethod m) {
+        String methodName = m.getName();
+        Pattern pattern = Pattern.compile("^test", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(methodName);
+        boolean matchFound = matcher.find();
+        if(matchFound)
+            return true;
+
         String runtimeAnnotation = "RuntimeVisibleAnnotations";
         return m.getMethodInfo().getAttributes().stream()
                 .anyMatch(attributeInfo -> attributeInfo.getName().equals(runtimeAnnotation)
@@ -63,5 +75,9 @@ public class TestClass implements Iterable<TestMethod> {
 
     public List<TestMethod> getTestMethods() {
         return testMethods;
+    }
+
+    public int getnTestMethods() {
+        return nTestMethods;
     }
 }

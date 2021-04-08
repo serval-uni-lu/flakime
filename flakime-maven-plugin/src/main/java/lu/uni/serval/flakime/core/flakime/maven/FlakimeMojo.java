@@ -86,7 +86,8 @@ public class FlakimeMojo extends AbstractMojo {
                         .parseFloat(Optional.ofNullable(System.getenv("FLAKE_RATE")).orElse(flakeRateString));
                 logger.info(String.format("Strategy %s loaded", strategyImpl.getClass().getName()));
                 logger.info(String.format("FlakeRate: %f", flakeRate));
-                logger.info(String.format("Found %d classes", project.getNumberClasses()));
+                int ntests = project.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum);
+                logger.info(String.format("Found %d classes with %d tests", project.getNumberClasses(),ntests));
                 logger.debug(String.format("Running preProcess of %s", strategyImpl.getClass().getSimpleName()));
 
                 strategyImpl.preProcess(project,flakeRate);
