@@ -23,7 +23,7 @@ public class BernoulliStrategy implements Strategy {
     }
 
     @Override
-    public void preProcess(Project p) {
+    public void preProcess(Project p,double flakeRate) {
         //No preprocess needed.
     }
 
@@ -48,6 +48,6 @@ public class BernoulliStrategy implements Strategy {
 
     @Override
     public void postProcess() {
-        throw new UnsupportedOperationException("postProcess of bernoulli strategy not implemented");
+        //no post process needed
     }
 }

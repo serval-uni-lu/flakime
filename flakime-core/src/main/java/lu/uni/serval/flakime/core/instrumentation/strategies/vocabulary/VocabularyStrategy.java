@@ -43,7 +43,7 @@ public class VocabularyStrategy implements Strategy {
      * @throws Exception Thrown if buildModel failed
      */
     @Override
-    public void preProcess(final Project project) throws Exception {
+    public void preProcess(final Project project,double flakeRate) throws Exception {
         final InputStream dataSource = VocabularyStrategy.class.getClassLoader()
                 .getResourceAsStream("data/vocabulary.json");
         final TrainingData trainingData = new TrainingData(dataSource);
@@ -53,6 +53,7 @@ public class VocabularyStrategy implements Strategy {
             for (TestMethod testMethod : testClass) {
                 final File f = testMethod.getSourceCodeFile();
                 additionalTrainingText.addAll(this.getTestMethodBodyText(f, testMethod).values());
+
             }
         }
 
@@ -65,6 +66,8 @@ public class VocabularyStrategy implements Strategy {
             this.model = ModelFactory.load(MODEL_IMPLEMENTATION, this.logger, this.pathToModel);
             this.model.setData(trainingData, additionalTrainingText);
         }
+
+        project.forEach(tc -> tc.forEach(tm -> getTestFlakinessProbability(tm,flakeRate)));
     }
 
     /**
@@ -77,7 +80,9 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public double getTestFlakinessProbability(TestMethod test, int lineNumber, double flakeRate) {
-        return Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0) * flakeRate;
+        if (Optional.ofNullable(this.probabilitiesPerStatement).isPresent())
+            return Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0) * flakeRate;
+        return 0.0;
     }
 
     /**
@@ -159,7 +164,7 @@ public class VocabularyStrategy implements Strategy {
 
     @Override
     public void postProcess() {
-        throw new UnsupportedOperationException("Vocabulary strategy postProcess() not implemented");
+        //Nothing to be done
     }
 
     /**

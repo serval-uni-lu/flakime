@@ -98,7 +98,7 @@ public class FlakimeInstrumenter {
         result.append(declaration);
         result.append("\n");
         result.append("fw.write(");
-        String filePayload = String.format("String.valueOf(%s)+\",%d,%.2f%n\"","System.currentTimeMillis()",lineNumber,probability);
+        String filePayload = String.format("String.valueOf(%s)+\",%d,%.2f\\n\"","System.currentTimeMillis()",lineNumber,probability);
         result.append(filePayload).append(");");
         result.append("\n");
         result.append("fw.close();");

@@ -89,7 +89,7 @@ public class FlakimeMojo extends AbstractMojo {
                 logger.info(String.format("Found %d classes", project.getNumberClasses()));
                 logger.debug(String.format("Running preProcess of %s", strategyImpl.getClass().getSimpleName()));
 
-                strategyImpl.preProcess(project);
+                strategyImpl.preProcess(project,flakeRate);
 
                 for (TestClass testClass : project) {
                     logger.debug(String.format("Process class %s", testClass.getName()));
@@ -114,8 +114,9 @@ public class FlakimeMojo extends AbstractMojo {
             FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
                     flakeRate,disableReport);
         }catch (Exception e){
-            getLog().warn(String.format("Failed to instrument method %s: %s", testMethod.getName(),
-                    e.getMessage()));
+            e.printStackTrace();
+//            getLog().warn(String.format("Failed to instrument method %s: %s", testMethod.getName(),
+//                    e.getMessage()));
         }
     }
     /**

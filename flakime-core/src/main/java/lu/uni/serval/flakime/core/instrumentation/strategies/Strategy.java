@@ -16,7 +16,7 @@ public interface Strategy {
      * @param p The target project
      * @throws Exception If something fails during preprocess
      */
-    void preProcess(Project p) throws Exception;
+    void preProcess(Project p,double flakeRate) throws Exception;
 
     /**
      * Method that computes the flakiness probability of a particular statement identified by the enclosing test method and the statement line number.
