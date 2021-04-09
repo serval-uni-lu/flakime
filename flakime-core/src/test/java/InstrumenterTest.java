@@ -59,6 +59,7 @@ class InstrumenterTest {
         PROJECT =  new Project(
                 logger,
                 testAnnotation,
+                "",
                 f,
                 getResourceFile("sources"),
                 Collections.singletonList(getResourceFile("dep/5-7-0-M1/junit-jupiter-5.7.0-M1.jar").getAbsolutePath())

@@ -14,11 +14,11 @@ public class TestClassFactory {
         throw new IllegalAccessException("TestClassFactory should not be instantiated");
     }
 
-    public static TestClass create(Logger logger, Set<String> testAnnotations, String className, ClassPool classPool, File sourceFile, File outputDirectory) {
+    public static TestClass create(Logger logger, Set<String> testAnnotations,String testPattern, String className, ClassPool classPool, File sourceFile, File outputDirectory) {
         try {
             classPool.importPackage(className);
             CtClass ctClass = classPool.get(className);
-            return new TestClass(logger, testAnnotations, ctClass, sourceFile, outputDirectory);
+            return new TestClass(logger, testAnnotations,testPattern, ctClass, sourceFile, outputDirectory);
         } catch (NotFoundException e) {
             return null;
         }

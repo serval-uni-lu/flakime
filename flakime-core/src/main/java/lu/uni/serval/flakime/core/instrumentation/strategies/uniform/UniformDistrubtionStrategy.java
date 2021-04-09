@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.instrumentation.strategies.bernoulli;
+package lu.uni.serval.flakime.core.instrumentation.strategies.uniform;
 
 import java.util.Collections;
 import lu.uni.serval.flakime.core.data.Project;
@@ -15,10 +15,10 @@ import lu.uni.serval.flakime.core.utils.Logger;
  * The probability p is calculated by multiplying the proportion of executed lines of code wrt overall number of lines of code in the method body
  * by the pre-set flake rate
  */
-public class BernoulliStrategy implements Strategy {
+public class UniformDistrubtionStrategy implements Strategy {
     private final Logger logger;
 
-    public BernoulliStrategy(Logger logger) {
+    public UniformDistrubtionStrategy(Logger logger) {
         this.logger = logger;
     }
 
@@ -35,7 +35,7 @@ public class BernoulliStrategy implements Strategy {
         int executedLine = 1 + lineNumber - Collections.min(test.getStatementLineNumbers());
 
         double proportion = (double)executedLine/numberOfLines;
-        logger.info(String.format("[%s][total: %d][executed: %d]",test.getName(),numberOfLines,executedLine));
+        logger.debug(String.format("[%s][total: %d][executed: %d]",test.getName(),numberOfLines,executedLine));
 
         return proportion * flakeRate;
     }

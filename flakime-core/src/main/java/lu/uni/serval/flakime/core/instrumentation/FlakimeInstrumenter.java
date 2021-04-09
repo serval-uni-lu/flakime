@@ -7,6 +7,7 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
 import lu.uni.serval.flakime.core.data.TestMethod;
+import lu.uni.serval.flakime.core.instrumentation.strategies.uniform.UniformDistrubtionStrategy;
 
 /**
  * Executor to perform transformation.
@@ -25,7 +26,7 @@ public class FlakimeInstrumenter {
      * Method that triggers the computation of the payload and insert it at the given source code position
      *
      * @param testMethod The targeted test method
-     * @param strategy The strategy to use (see {@link lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary.VocabularyStrategy}, {@link lu.uni.serval.flakime.core.instrumentation.strategies.bernoulli.BernoulliStrategy}
+     * @param strategy The strategy to use (see {@link lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary.VocabularyStrategy}, {@link UniformDistrubtionStrategy}
      * @param outputDir The directory where the flake position report file will be written
      * @param disableFlag The environment variable name that control if the flake will occur
      * @param flakeRate The flake rate

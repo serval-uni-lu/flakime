@@ -18,19 +18,21 @@ public class Project implements Iterable<TestClass> {
     private final File classDirectory;
     private final File sourceDirectory;
     private final ClassPool classPool;
+    private final String testPattern;
     private List<TestClass> testClasses;
 
     private Set<String> classNames;
 
-    public Project(Logger logger, Set<String> testAnnotations, File classDirectory, File sourceDirectory, List<String> dependencies) throws NotFoundException {
+    public Project(Logger logger, Set<String> testAnnotations,String testPattern, File classDirectory, File sourceDirectory, List<String> dependencies) throws NotFoundException {
         this.logger = logger;
+        this.testPattern = testPattern;
         this.testAnnotations = testAnnotations;
         this.classDirectory = classDirectory;
         this.sourceDirectory = sourceDirectory;
         this.classPool = configureClassPool(getDefaultClassPool(), this.classDirectory, dependencies);
         this.testClasses = getClassNames().stream()
                 .map(name -> getSourceFile(name)
-                        .map(file -> TestClassFactory.create(this.logger, this.testAnnotations, name, this.classPool, file, this.classDirectory))
+                        .map(file -> TestClassFactory.create(this.logger, this.testAnnotations, testPattern,name, this.classPool, file, this.classDirectory))
                         .orElse(null)
                 )
                 .filter(Objects::nonNull)
@@ -45,7 +47,7 @@ public class Project implements Iterable<TestClass> {
     public Iterator<TestClass> iterator(){
         return getClassNames().stream()
                 .map(name -> getSourceFile(name)
-                        .map(file -> TestClassFactory.create(this.logger, this.testAnnotations, name, this.classPool, file, this.classDirectory))
+                        .map(file -> TestClassFactory.create(this.logger, this.testAnnotations,this.testPattern, name, this.classPool, file, this.classDirectory))
                         .orElse(null)
                 )
                 .filter(Objects::nonNull)

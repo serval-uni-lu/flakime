@@ -1,7 +1,7 @@
 package lu.uni.serval.flakime.core.instrumentation.strategies;
 
 import java.util.Optional;
-import lu.uni.serval.flakime.core.instrumentation.strategies.bernoulli.BernoulliStrategy;
+import lu.uni.serval.flakime.core.instrumentation.strategies.uniform.UniformDistrubtionStrategy;
 import lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary.VocabularyStrategy;
 import lu.uni.serval.flakime.core.utils.Logger;
 
@@ -27,12 +27,12 @@ public class StrategyFactory {
      * @throws FileNotFoundException Thrown if the file corresponding to the model is not found.
      */
     public static Strategy fromName(String name, Properties properties, Logger logger) throws ClassNotFoundException, FileNotFoundException {
-        if(name.trim().equalsIgnoreCase("bernoulli")){
-            return  new BernoulliStrategy(logger);
+        if(name.trim().equalsIgnoreCase("uniformDistribution")){
+            return  new UniformDistrubtionStrategy(logger);
         }
 
         if (name.trim().equalsIgnoreCase("vocabulary")){
-            final String nTrees = properties.getProperty("randomForestTrees", String.valueOf(50));
+            final String nTrees = properties.getProperty("randomForestTrees", String.valueOf(100));
             final String nCores = properties.getProperty("randomForestThreads", String.valueOf(Runtime.getRuntime().availableProcessors()));
             boolean trainModel = Boolean.parseBoolean(properties.getProperty("trainModel", "true"));
 

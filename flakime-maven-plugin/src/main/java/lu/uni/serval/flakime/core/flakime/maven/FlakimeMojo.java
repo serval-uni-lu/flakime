@@ -1,5 +1,6 @@
 package lu.uni.serval.flakime.core.flakime.maven;
 
+import edu.stanford.nlp.util.CollectionUtils;
 import javassist.NotFoundException;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestClass;
@@ -20,9 +21,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 @Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.TEST_COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
@@ -30,17 +29,20 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(property = "project", readonly = true)
     MavenProject mavenProject;
 
-    @Parameter(defaultValue = "bernoulli", property = "flakime.strategy")
+    @Parameter(defaultValue = "uniformDistribution", property = "flakime.strategy")
     String strategy;
 
     @Parameter(defaultValue = "false",property = "flakime.disableReport")
     boolean disableReport;
 
-    @Parameter(defaultValue = "0.05", property = "flakime.flakeRate")
-    String flakeRateString;
+    @Parameter(defaultValue = "0.1", property = "flakime.flakeRate")
+    double flakeRate;
 
-    @Parameter(property = "flakime.testAnnotations", required = true)
-    Set<String> testAnnotations;
+    @Parameter(defaultValue = "@org.junit.jupiter.api.Test,@org.junit.Test,@org.junit.jupiter.api.Test",property = "flakime.testAnnotations", required = false)
+    Set<String> testAnnotations ;
+
+    @Parameter(defaultValue = " ",property = "flakime.testPattern",required = false)
+    String testPattern;
 
     @Parameter(defaultValue = "target/test-classes", property = "flakime.testClassDirectory")
     private String testClassDirectory;
@@ -83,8 +85,7 @@ public class FlakimeMojo extends AbstractMojo {
                 final MavenLogger mavenLogger = new MavenLogger(logger);
                 final Project project = initializeProject(mavenProject, mavenLogger);
                 strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
-                float flakeRate = Float
-                        .parseFloat(Optional.ofNullable(System.getenv("FLAKE_RATE")).orElse(flakeRateString));
+                logger.info("Test annotations :["+String.join(",",testAnnotations)+"]");
                 logger.info(String.format("Strategy %s loaded", strategyImpl.getClass().getName()));
                 logger.info(String.format("FlakeRate: %f", flakeRate));
                 int ntests = project.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum);
@@ -111,7 +112,7 @@ public class FlakimeMojo extends AbstractMojo {
                 }
             }
     }
-    private void instrument(TestMethod testMethod,Strategy strategyImpl,File outputDirectory,String disableFlagName, float flakeRate,boolean disableReport){
+    private void instrument(TestMethod testMethod,Strategy strategyImpl,File outputDirectory,String disableFlagName, double flakeRate,boolean disableReport){
         try{
             FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
                     flakeRate,disableReport);
@@ -134,7 +135,8 @@ public class FlakimeMojo extends AbstractMojo {
      */
     public Project initializeProject(MavenProject mavenProject, MavenLogger mavenLogger)
             throws NotFoundException, DependencyResolutionRequiredException {
-        return new Project(mavenLogger, testAnnotations, getDirectory(testClassDirectory),
+
+        return new Project(mavenLogger, testAnnotations,testPattern, getDirectory(testClassDirectory),
                 getDirectory(testSourceDirectory), mavenProject.getTestClasspathElements());
     }
 
