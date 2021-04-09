@@ -1,6 +1,5 @@
 package lu.uni.serval.flakime.core.flakime.maven;
 
-import edu.stanford.nlp.util.CollectionUtils;
 import javassist.NotFoundException;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestClass;
