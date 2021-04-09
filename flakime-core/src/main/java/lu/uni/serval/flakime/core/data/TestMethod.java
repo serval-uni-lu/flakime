@@ -176,6 +176,15 @@ public class TestMethod {
         return this.ctMethod.getName();
     }
 
+    /**
+     * Return the method fully qualified name
+     *
+     * @return method fully qualified name
+     */
+    public String getLongName() {
+        return this.getLongName();
+    }
+
     public File getSourceCodeFile() {
         return sourceCodeFile;
     }

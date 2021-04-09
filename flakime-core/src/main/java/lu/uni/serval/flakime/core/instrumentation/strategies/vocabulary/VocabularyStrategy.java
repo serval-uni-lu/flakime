@@ -29,8 +29,9 @@ public class VocabularyStrategy implements Strategy {
     private String pathToModel;
     private boolean trainModel;
     private Map<Integer, Double> probabilitiesPerStatement;
+    private Map<String,Map<Integer,Double>> probabilitiesPerTestMethod;
     private static final Model.Implementation MODEL_IMPLEMENTATION = Model.Implementation.WEKA;
-
+    private double maxProba = 0;
     public VocabularyStrategy(Logger logger) {
         this.logger = logger;
     }
@@ -44,6 +45,7 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public void preProcess(final Project project,double flakeRate) throws Exception {
+        probabilitiesPerTestMethod = new HashMap<>();
         final InputStream dataSource = VocabularyStrategy.class.getClassLoader()
                 .getResourceAsStream("data/vocabulary.json");
         final TrainingData trainingData = new TrainingData(dataSource);
@@ -67,21 +69,32 @@ public class VocabularyStrategy implements Strategy {
             this.model.setData(trainingData, additionalTrainingText);
         }
 
-        project.forEach(tc -> tc.forEach(tm -> getTestFlakinessProbability(tm,flakeRate)));
+        for (TestClass tc: project){
+            for(TestMethod tm: tc){
+                double temp = getTestFlakinessProbability(tm,1);
+                probabilitiesPerTestMethod.put(tm.getName(),this.probabilitiesPerStatement);
+                if(temp > this.maxProba)
+                    this.maxProba = temp;
+            }
+        }
+
+
     }
 
     /**
      * Method to return the particular block of test body (identified by its
      * starting line number) probability to be flaky based on the random Forest.
      *
-     * @param test       The test method which the codeblcok is.
+     * @param test       The test method which the codeblock is.
      * @param lineNumber The line number at which a particular statement is executed
      * @return Return the probability of the codeBlock to be flaky
      */
     @Override
     public double getTestFlakinessProbability(TestMethod test, int lineNumber, double flakeRate) {
-        if (Optional.ofNullable(this.probabilitiesPerStatement).isPresent())
-            return Optional.ofNullable(this.probabilitiesPerStatement.get(lineNumber)).orElse(0.0) * flakeRate;
+//        getTestFlakinessProbability(test,flakeRate);
+        Map<Integer,Double> probabilityPerStatement = this.probabilitiesPerTestMethod.get(test.getName());
+        if (Optional.ofNullable(probabilityPerStatement).isPresent())
+            return Optional.ofNullable(probabilityPerStatement.get(lineNumber)).orElse(0.0) * flakeRate / this.maxProba;
         return 0.0;
     }
 

@@ -7,6 +7,7 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
 import lu.uni.serval.flakime.core.data.TestMethod;
+import me.tongfei.progressbar.ProgressBar;
 
 /**
  * Executor to perform transformation.
@@ -41,10 +42,11 @@ public class FlakimeInstrumenter {
         testMethod.insertBefore(String.format("%s = Boolean.parseBoolean(System.getenv(\"%s\"));", FLAKIME_DISABLE_FLAG,disableFlag));
 
         Set<Integer> statementLineNumbers = testMethod.getStatementLineNumbers();
-        for (int lineNumber : statementLineNumbers) {
-            final String payload = computePayload(testMethod, strategy, lineNumber,outputDir,flakeRate,disableReport);
-            testMethod.insertAt(lineNumber+1,payload);
-        }
+            for (int lineNumber : statementLineNumbers) {
+                final String payload = computePayload(testMethod, strategy, lineNumber,outputDir,flakeRate,disableReport);
+                testMethod.insertAt(lineNumber+1,payload);
+            }
+
     }
 
     private static String prettyName(String name){
