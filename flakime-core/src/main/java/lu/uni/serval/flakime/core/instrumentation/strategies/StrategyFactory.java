@@ -34,14 +34,11 @@ public class StrategyFactory {
         if (name.trim().equalsIgnoreCase("vocabulary")){
             final String nTrees = properties.getProperty("randomForestTrees", String.valueOf(100));
             final String nCores = properties.getProperty("randomForestThreads", String.valueOf(Runtime.getRuntime().availableProcessors()));
-            boolean trainModel = Boolean.parseBoolean(properties.getProperty("trainModel", "true"));
+            boolean trainModel = Boolean.parseBoolean(properties.getProperty("forceTraining", "false"));
 
             String pathModel = "";
 
-            pathModel = Optional.ofNullable(properties.getProperty("modelPath")).orElse("rfc_classifier");
-            if(!trainModel && !new File(pathModel).exists()){
-                throw new FileNotFoundException(String.format("Cannot find modelPath set at '%s'", pathModel));
-            }
+            pathModel = properties.getProperty("modelPath");
 
             final VocabularyStrategy strategy = new VocabularyStrategy(logger);
             strategy.setnThreads(Integer.parseInt(nCores));

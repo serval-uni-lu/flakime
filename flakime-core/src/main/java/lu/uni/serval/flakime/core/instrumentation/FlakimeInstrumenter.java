@@ -68,7 +68,7 @@ public class FlakimeInstrumenter {
         outputDir.mkdir();
 
         String fileWritterString = "";
-        if (!disableReport) fileWritterString = writeFileString(prettyName(testMethod.getName()),probability,path,lineNumber);
+        if (!disableReport) fileWritterString = writeFileString(prettyName(testMethod.getLongName()),probability,path,lineNumber);
 
         String flakeCondition = flakeConditionString(probability);
 

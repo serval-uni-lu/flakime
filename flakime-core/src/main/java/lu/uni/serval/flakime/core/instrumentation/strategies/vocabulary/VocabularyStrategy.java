@@ -59,7 +59,7 @@ public class VocabularyStrategy implements Strategy {
             }
         }
 
-        if (trainModel) {
+        if (trainModel || !new File(pathToModel).exists()) {
             this.model = ModelFactory.create(MODEL_IMPLEMENTATION, this.logger, this.nTrees, this.nThreads);
             this.model.setData(trainingData, additionalTrainingText);
             this.model.train();

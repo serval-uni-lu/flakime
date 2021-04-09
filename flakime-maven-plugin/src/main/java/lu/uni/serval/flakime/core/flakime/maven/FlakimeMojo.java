@@ -83,6 +83,9 @@ public class FlakimeMojo extends AbstractMojo {
         if(!skip)
             try {
                 final MavenLogger mavenLogger = new MavenLogger(logger);
+
+                initialiseStrategyProperties();
+
                 final Project project = initializeProject(mavenProject, mavenLogger);
                 strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
                 logger.info("Test annotations :["+String.join(",",testAnnotations)+"]");
@@ -138,6 +141,12 @@ public class FlakimeMojo extends AbstractMojo {
 
         return new Project(mavenLogger, testAnnotations,testPattern, getDirectory(testClassDirectory),
                 getDirectory(testSourceDirectory), mavenProject.getTestClasspathElements());
+    }
+
+    private void initialiseStrategyProperties(){
+        this.strategyParameters = Optional.ofNullable(strategyParameters).orElse(new Properties());
+        this.strategyParameters.putIfAbsent("modelPath",mavenProject.getBuild().getDirectory()+"/rfc_classifier");
+
     }
 
     private File getDirectory(String path) {
