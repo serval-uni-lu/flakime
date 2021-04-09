@@ -20,6 +20,27 @@
 
     <packaging>pom</packaging>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>franadr</id>
+            <name>Adriano Franci</name>
+            <email>adriano@franci.lu</email>
+        </developer>
+        <developer>
+            <id>kabinja</id>
+            <name>Renaud Rwemalika</name>
+            <email>renaudrwemalika@gmail.com</email>
+        </developer>
+    </developers>
+
     <modules>
         <module>flakime-core</module>
         <module>flakime-maven-plugin</module>
