@@ -7,7 +7,6 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
 import lu.uni.serval.flakime.core.data.TestMethod;
-import me.tongfei.progressbar.ProgressBar;
 
 /**
  * Executor to perform transformation.

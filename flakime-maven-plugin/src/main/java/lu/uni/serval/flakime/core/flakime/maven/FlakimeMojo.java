@@ -8,7 +8,7 @@ import lu.uni.serval.flakime.core.flakime.maven.utils.MavenLogger;
 import lu.uni.serval.flakime.core.instrumentation.FlakimeInstrumenter;
 import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
 import lu.uni.serval.flakime.core.instrumentation.strategies.StrategyFactory;
-import me.tongfei.progressbar.ProgressBar;
+
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -116,9 +116,8 @@ public class FlakimeMojo extends AbstractMojo {
             FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
                     flakeRate,disableReport);
         }catch (Exception e){
-            e.printStackTrace();
-//            getLog().warn(String.format("Failed to instrument method %s: %s", testMethod.getName(),
-//                    e.getMessage()));
+            getLog().warn(String.format("Failed to instrument method %s: %s", testMethod.getName(),
+                    e.getMessage()));
         }
     }
     /**

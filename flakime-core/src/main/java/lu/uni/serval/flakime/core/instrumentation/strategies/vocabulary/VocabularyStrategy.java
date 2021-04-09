@@ -91,7 +91,6 @@ public class VocabularyStrategy implements Strategy {
      */
     @Override
     public double getTestFlakinessProbability(TestMethod test, int lineNumber, double flakeRate) {
-//        getTestFlakinessProbability(test,flakeRate);
         Map<Integer,Double> probabilityPerStatement = this.probabilitiesPerTestMethod.get(test.getName());
         if (Optional.ofNullable(probabilityPerStatement).isPresent())
             return Optional.ofNullable(probabilityPerStatement.get(lineNumber)).orElse(0.0) * flakeRate / this.maxProba;
