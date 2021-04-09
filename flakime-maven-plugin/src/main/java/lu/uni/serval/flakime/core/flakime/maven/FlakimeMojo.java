@@ -43,10 +43,10 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = " ",property = "flakime.testPattern",required = false)
     String testPattern;
 
-    @Parameter(defaultValue = "target/test-classes", property = "flakime.testClassDirectory")
+    @Parameter(defaultValue = "${project.build.testOutputDirectory}", property = "flakime.testClassDirectory")
     private String testClassDirectory;
 
-    @Parameter(defaultValue = "src/test/java", property = "flakime.testSourceDirectory")
+    @Parameter(defaultValue = "${project.build.testSourceDirectory}", property = "flakime.testSourceDirectory")
     private String testSourceDirectory;
 
     @Parameter
@@ -87,6 +87,8 @@ public class FlakimeMojo extends AbstractMojo {
 
                 final Project project = initializeProject(mavenProject, mavenLogger);
                 strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
+                logger.info("Test source directory : "+testSourceDirectory);
+                logger.info("Test bin directory : "+testClassDirectory);
                 logger.info("Test annotations :["+String.join(",",testAnnotations)+"]");
                 logger.info(String.format("Strategy %s loaded", strategyImpl.getClass().getName()));
                 logger.info(String.format("FlakeRate: %f", flakeRate));
