@@ -37,10 +37,10 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "0.1", property = "flakime.flakeRate")
     double flakeRate;
 
-    @Parameter(defaultValue = "@org.junit.jupiter.api.Test,@org.junit.Test,@org.junit.jupiter.api.Test",property = "flakime.testAnnotations", required = false)
+    @Parameter(defaultValue = "@org.junit.jupiter.api.Test,@org.junit.Test,@org.junit.jupiter.api.Test",property = "flakime.testAnnotations")
     Set<String> testAnnotations ;
 
-    @Parameter(defaultValue = " ",property = "flakime.testPattern",required = false)
+    @Parameter(defaultValue = " ",property = "flakime.testPattern")
     String testPattern;
 
     @Parameter(defaultValue = "${project.build.testOutputDirectory}", property = "flakime.testClassDirectory")
@@ -52,7 +52,7 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter
     private Properties strategyParameters;
 
-    @Parameter(defaultValue = "${project.build.directory}/flakime")
+    @Parameter(defaultValue = "${project.build.directory}/flakime", property = "flakime.outputDirectory")
     private File outputDirectory;
 
     @Parameter(defaultValue = "FLAKIME_DISABLE", property = "flakime.disableFlag")
@@ -86,6 +86,11 @@ public class FlakimeMojo extends AbstractMojo {
                 initialiseStrategyProperties();
 
                 final Project project = initializeProject(mavenProject, mavenLogger);
+
+                if(!disableReport){
+                    logger.info("Report output directory: " + outputDirectory.getAbsolutePath());
+                }
+
                 strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
                 logger.info("Test source directory : "+testSourceDirectory);
                 logger.info("Test bin directory : "+testClassDirectory);
