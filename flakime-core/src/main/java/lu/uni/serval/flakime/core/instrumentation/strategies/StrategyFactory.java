@@ -1,11 +1,9 @@
 package lu.uni.serval.flakime.core.instrumentation.strategies;
 
-import java.util.Optional;
 import lu.uni.serval.flakime.core.instrumentation.strategies.uniform.UniformDistrubtionStrategy;
 import lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary.VocabularyStrategy;
 import lu.uni.serval.flakime.core.utils.Logger;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Properties;
 
