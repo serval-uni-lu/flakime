@@ -1,7 +1,6 @@
 package lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary;
 
 import lu.uni.serval.flakime.core.utils.Logger;
-import org.apache.commons.lang3.NotImplementedException;
 
 public class ModelFactory {
 
