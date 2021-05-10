@@ -13,7 +13,7 @@
 
     <groupId>lu.uni.serval</groupId>
     <artifactId>flakime</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.1.2</version>
 
     <packaging>pom</packaging>
 
@@ -22,7 +22,7 @@
         <!-- <developerConnection>scm:git:git@github.com:UL-SnT-Serval/UL-SnT-Serval.git</developerConnection> -->
         <!-- <developerConnection>scm:git:git@github.com:kabinja/kabinja.git</developerConnection> -->
         <url>https://github.com/UL-SnT-Serval/flakime</url>
-        <tag>HEAD</tag>
+        <tag>flakime-0.1.2</tag>
     </scm>
 
     <name>Flakime</name>
