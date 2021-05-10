@@ -4,10 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <revision>0.1.0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
         <sonar.projectKey>flakime</sonar.projectKey>
         <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
         <sonar.organization>deploy-serval-snt</sonar.organization>
