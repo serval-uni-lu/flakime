@@ -28,6 +28,14 @@
         <tag>HEAD</tag>
     </scm>
 
+    <name>Flakime</name>
+    <url>https://github.com/UL-SnT-Serval/flakime</url>
+
+    <description>
+        This project allows simulating flakiness by injecting exception during test sources compilation at computed locations
+    </description>
+
+
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
