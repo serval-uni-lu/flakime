@@ -21,10 +21,11 @@
     <packaging>pom</packaging>
 
     <scm>
-        <connection>scm:git:https://github.com/UL-SnT-Serval/flakime</connection>
+        <connection>scm:git:git@github.com:UL-SnT-Serval/flakime.git</connection>
+        <developerConnection>scm:git:git@github.com:UL-SnT-Serval/UL-SnT-Serval.git</developerConnection>
         <!-- <developerConnection>scm:git:git@github.com:kabinja/kabinja.git</developerConnection> -->
         <url>https://github.com/UL-SnT-Serval/flakime</url>
-        <tag>flakime-0.1.0-SNAPSHOT</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <licenses>
