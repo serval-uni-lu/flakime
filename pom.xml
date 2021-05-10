@@ -16,15 +16,15 @@
 
     <groupId>lu.uni.serval</groupId>
     <artifactId>flakime</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
     <scm>
         <connection>scm:git:git://github.com/UL-SnT-Serval/flakime.git</connection>
-        <developerConnection>scm:git:git@github.com:kabinja/kabinja.git</developerConnection>
+        <!-- <developerConnection>scm:git:git@github.com:kabinja/kabinja.git</developerConnection> -->
         <url>https://github.com/UL-SnT-Serval/flakime</url>
-        <tag>flakime-0.1.0</tag>
+        <tag>flakime-0.1.0-SNAPSHOT</tag>
     </scm>
 
     <licenses>
