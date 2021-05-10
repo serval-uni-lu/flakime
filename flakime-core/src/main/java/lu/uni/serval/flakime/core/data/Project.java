@@ -8,51 +8,39 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import lu.uni.serval.flakime.core.utils.Logger;
+import lu.uni.serval.flakime.core.utils.NameFilter;
 import org.apache.commons.io.FileUtils;
 
 import static org.apache.commons.io.FilenameUtils.removeExtension;
 
 public class Project implements Iterable<TestClass> {
     private final Logger logger;
-    private final Set<String> testAnnotations;
+    private final NameFilter annotationFilters;
+    private final NameFilter methodFilters;
+    private final NameFilter classFilters;
     private final File classDirectory;
     private final File sourceDirectory;
     private final ClassPool classPool;
-    private final String testPattern;
-    private List<TestClass> testClasses;
+    private final List<TestClass> testClasses;
 
-    private Set<String> classNames;
-
-    public Project(Logger logger, Set<String> testAnnotations,String testPattern, File classDirectory, File sourceDirectory, List<String> dependencies) throws NotFoundException {
+    public Project(Logger logger, Set<String> annotationFilters, Set<String> methodFilters, Set<String> classFilters, File classDirectory, File sourceDirectory, List<String> dependencies) throws NotFoundException {
         this.logger = logger;
-        this.testPattern = testPattern;
-        this.testAnnotations = testAnnotations;
+        this.annotationFilters = new NameFilter(annotationFilters);
+        this.methodFilters = new NameFilter(methodFilters);
+        this.classFilters = new NameFilter(classFilters);
         this.classDirectory = classDirectory;
         this.sourceDirectory = sourceDirectory;
         this.classPool = configureClassPool(getDefaultClassPool(), this.classDirectory, dependencies);
-        this.testClasses = getClassNames().stream()
-                .map(name -> getSourceFile(name)
-                        .map(file -> TestClassFactory.create(this.logger, this.testAnnotations, testPattern,name, this.classPool, file, this.classDirectory))
-                        .orElse(null)
-                )
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        this.testClasses = initTestClasses();
     }
 
     public int getNumberClasses(){
-        return getClassNames().size();
+        return this.testClasses.size();
     }
 
     @Override
     public Iterator<TestClass> iterator(){
-        return getClassNames().stream()
-                .map(name -> getSourceFile(name)
-                        .map(file -> TestClassFactory.create(this.logger, this.testAnnotations,this.testPattern, name, this.classPool, file, this.classDirectory))
-                        .orElse(null)
-                )
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList())
-                .iterator();
+        return this.testClasses.iterator();
     }
 
     /**
@@ -87,17 +75,19 @@ public class Project implements Iterable<TestClass> {
         return classPool;
     }
 
-    public Set<String> getClassNames() {
-        if(classNames == null) {
-            final String[] extensions = {"class"};
+    private List<TestClass> initTestClasses() {
+        final String[] extensions = {"class"};
 
-            classNames = FileUtils.listFiles(classDirectory, extensions, true).stream()
-                    .map(f -> extractClassNameFromFile(classDirectory, f))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-        }
-
-        return classNames;
+        return FileUtils.listFiles(classDirectory, extensions, true).stream()
+                .map(f -> extractClassNameFromFile(classDirectory, f))
+                .filter(Objects::nonNull)
+                .filter(classFilters::matches)
+                .map(name -> getSourceFile(name)
+                        .map(file -> TestClassFactory.create(this.logger, this.annotationFilters, this.methodFilters, name, this.classPool, file, this.classDirectory))
+                        .orElse(null)
+                )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private Optional<File> getSourceFile(String className){
@@ -140,9 +130,5 @@ public class Project implements Iterable<TestClass> {
 
     public List<TestClass> getTestClasses() {
         return testClasses;
-    }
-
-    public void setTestClasses(List<TestClass> testClasses) {
-        this.testClasses = testClasses;
     }
 }

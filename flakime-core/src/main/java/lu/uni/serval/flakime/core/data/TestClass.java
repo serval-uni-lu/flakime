@@ -6,6 +6,7 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.bytecode.AttributeInfo;
 import lu.uni.serval.flakime.core.utils.Logger;
+import lu.uni.serval.flakime.core.utils.NameFilter;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,18 +20,17 @@ import java.util.stream.Collectors;
 
 public class TestClass implements Iterable<TestMethod> {
     private final Logger logger;
-    private final Set<String> testAnnotations;
-    private final String testPattern;
+    private final NameFilter annotationFilters;
+    private final NameFilter methodFilters;
     private final CtClass ctClass;
     private final File outputDirectory;
     private final List<TestMethod> testMethods;
     private int nTestMethods = 0;
 
-    public TestClass(Logger logger, Set<String> testAnnotations,String testPattern, CtClass ctClass, File sourceFile,
-            File outputDirectory) {
+    public TestClass(Logger logger, NameFilter annotationFilters, NameFilter methodFilters, CtClass ctClass, File sourceFile, File outputDirectory) {
         this.logger = logger;
-        this.testAnnotations = testAnnotations;
-        this.testPattern = testPattern;
+        this.annotationFilters = annotationFilters;
+        this.methodFilters = methodFilters;
         this.ctClass = ctClass;
         this.outputDirectory = outputDirectory;
         this.testMethods = Arrays.stream(ctClass.getDeclaredMethods()).filter(this::isTest)
@@ -60,12 +60,8 @@ public class TestClass implements Iterable<TestMethod> {
     private boolean isTest(CtMethod m) {
         String methodName = m.getName();
 
-        if(!this.testPattern.isEmpty() ){
-            Pattern pattern = Pattern.compile(this.testPattern, Pattern.CASE_INSENSITIVE);
-            Matcher matcher = pattern.matcher(methodName);
-            boolean matchFound = matcher.find();
-            if(matchFound)
-                return true;
+        if(!this.methodFilters.matches(methodName)){
+            return false;
         }
 
         String runtimeAnnotation = "RuntimeVisibleAnnotations";
@@ -73,14 +69,12 @@ public class TestClass implements Iterable<TestMethod> {
                 .filter(attributeInfo -> attributeInfo.getName().equals(runtimeAnnotation)).collect(Collectors.toList());
 
         for(AttributeInfo attribute:ai){
-            for(String annotation: testAnnotations){
-                if (attribute.toString().startsWith(annotation))
-                    return true;
+            if(!this.annotationFilters.matches(attribute.toString())){
+                return false;
             }
         }
 
-        return false;
-
+        return true;
     }
 
     public String getName() {

@@ -52,14 +52,15 @@ class InstrumenterTest {
 
     @BeforeAll
     static void setup() throws IOException, URISyntaxException, NotFoundException {
-        Set<String> testAnnotation = Stream.of("@org.junit.jupiter.api.Test", "ABC").collect(
+        Set<String> annotationFilters = Stream.of("@org.junit.jupiter.api.Test", "ABC").collect(
                 Collectors.toSet());
 
         File f = unzip(getResourceFile("test-classes.zip"));
         PROJECT =  new Project(
                 logger,
-                testAnnotation,
-                "",
+                annotationFilters,
+                Collections.emptySet(),
+                Collections.emptySet(),
                 f,
                 getResourceFile("sources"),
                 Collections.singletonList(getResourceFile("dep/5-7-0-M1/junit-jupiter-5.7.0-M1.jar").getAbsolutePath())
@@ -70,7 +71,7 @@ class InstrumenterTest {
 
     @Test
     void projectLoadTest(){
-        assertEquals(4,PROJECT.getClassNames().size());
+        assertEquals(4, PROJECT.getNumberClasses());
     }
 
     @Test

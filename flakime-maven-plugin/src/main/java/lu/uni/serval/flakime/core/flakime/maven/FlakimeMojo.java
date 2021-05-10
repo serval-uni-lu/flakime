@@ -37,11 +37,14 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "0.1", property = "flakime.flakeRate")
     double flakeRate;
 
-    @Parameter(defaultValue = "@org.junit.jupiter.api.Test,@org.junit.Test,@org.junit.jupiter.api.Test",property = "flakime.testAnnotations")
-    Set<String> testAnnotations ;
+    @Parameter(defaultValue = "^@org.junit.jupiter.api.Test*.,@org.junit.Test,^@org.junit.jupiter.api.Test*.",property = "flakime.annotationFilters")
+    Set<String> annotationFilters;
 
-    @Parameter(defaultValue = " ",property = "flakime.testPattern")
-    String testPattern;
+    @Parameter(defaultValue = " ",property = "flakime.methodFilters")
+    Set<String> methodFilters;
+
+    @Parameter(defaultValue = " ",property = "flakime.classFilters")
+    Set<String> classFilters;
 
     @Parameter(defaultValue = "${project.build.testOutputDirectory}", property = "flakime.testClassDirectory")
     private String testClassDirectory;
@@ -94,9 +97,12 @@ public class FlakimeMojo extends AbstractMojo {
                 strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
                 logger.info("Test source directory : "+testSourceDirectory);
                 logger.info("Test bin directory : "+testClassDirectory);
-                logger.info("Test annotations :["+String.join(",",testAnnotations)+"]");
+                logger.info("Annotation Filters :["+String.join(",", annotationFilters)+"]");
+                logger.info("Method Filters :["+String.join(",", methodFilters)+"]");
+                logger.info("Class Filters :["+String.join(",", classFilters)+"]");
                 logger.info(String.format("Strategy %s loaded", strategyImpl.getClass().getName()));
                 logger.info(String.format("FlakeRate: %f", flakeRate));
+
                 int ntests = project.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum);
                 logger.info(String.format("Found %d classes with %d tests", project.getNumberClasses(),ntests));
                 logger.debug(String.format("Running preProcess of %s", strategyImpl.getClass().getSimpleName()));
@@ -145,7 +151,7 @@ public class FlakimeMojo extends AbstractMojo {
     public Project initializeProject(MavenProject mavenProject, MavenLogger mavenLogger)
             throws NotFoundException, DependencyResolutionRequiredException {
 
-        return new Project(mavenLogger, testAnnotations,testPattern, getDirectory(testClassDirectory),
+        return new Project(mavenLogger, annotationFilters, methodFilters, classFilters, getDirectory(testClassDirectory),
                 getDirectory(testSourceDirectory), mavenProject.getTestClasspathElements());
     }
 
