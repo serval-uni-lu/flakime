@@ -1,5 +1,4 @@
 ![build](https://github.com/UL-SnT-Serval/flakime/actions/workflows/build.yml/badge.svg)
-![codecov](.github/badges/jacoco.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # Flakime 
