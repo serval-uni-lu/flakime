@@ -21,6 +21,7 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Mojo(name = "flakime-injector", defaultPhase = LifecyclePhase.TEST_COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class FlakimeMojo extends AbstractMojo {
@@ -37,7 +38,7 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(defaultValue = "0.1", property = "flakime.flakeRate")
     double flakeRate;
 
-    @Parameter(defaultValue = "^@org.junit.jupiter.api.Test*.,@org.junit.Test,^@org.junit.jupiter.api.Test*.",property = "flakime.annotationFilters")
+    @Parameter(defaultValue = " ",property = "flakime.annotationFilters")
     Set<String> annotationFilters;
 
     @Parameter(defaultValue = " ",property = "flakime.methodFilters")
@@ -94,6 +95,8 @@ public class FlakimeMojo extends AbstractMojo {
                     logger.info("Report output directory: " + outputDirectory.getAbsolutePath());
                 }
 
+                initializeFilters();
+
                 strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
                 logger.info("Test source directory : "+testSourceDirectory);
                 logger.info("Test bin directory : "+testClassDirectory);
@@ -127,6 +130,18 @@ public class FlakimeMojo extends AbstractMojo {
                 }
             }
     }
+
+    private void initializeFilters() {
+        annotationFilters = annotationFilters.stream().filter(s -> !s.trim().isEmpty()).collect(Collectors.toSet());
+        methodFilters = methodFilters.stream().filter(s -> !s.trim().isEmpty()).collect(Collectors.toSet());
+        classFilters = classFilters.stream().filter(s -> !s.trim().isEmpty()).collect(Collectors.toSet());
+
+        if(annotationFilters.isEmpty() && methodFilters.isEmpty()){
+            annotationFilters.add("^@org\\.junit\\.jupiter\\.api\\.Test*.");
+            annotationFilters.add("@org\\.junit\\.Test");
+        }
+    }
+
     private void instrument(TestMethod testMethod,Strategy strategyImpl,File outputDirectory,String disableFlagName, double flakeRate,boolean disableReport){
         try{
             FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,

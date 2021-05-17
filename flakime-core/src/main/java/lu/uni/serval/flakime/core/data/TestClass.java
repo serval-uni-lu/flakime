@@ -60,6 +60,10 @@ public class TestClass implements Iterable<TestMethod> {
     private boolean isTest(CtMethod m) {
         String methodName = m.getName();
 
+        if(m.getMethodInfo().isConstructor()){
+            return false;
+        }
+
         if(!this.methodFilters.matches(methodName)){
             return false;
         }
