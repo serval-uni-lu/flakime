@@ -19,7 +19,10 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -112,15 +115,23 @@ public class FlakimeMojo extends AbstractMojo {
 
                 strategyImpl.preProcess(project,flakeRate);
 
+                final Map<String, Double> testProbabilities = new HashMap<>();
+
                 for (TestClass testClass : project) {
                     logger.debug(String.format("Process class %s", testClass.getName()));
                     for (TestMethod testMethod : testClass) {
                         logger.debug(String.format("\tProcess method %s", testMethod.getName()));
-                        instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
-                                flakeRate,disableReport);
+                        instrument(testMethod, strategyImpl, outputDirectory, disableFlagName, flakeRate,disableReport);
+                        testProbabilities.put(
+                                testMethod.getLongName(),
+                                strategyImpl.getTestFlakinessProbability(testMethod, 1.)
+                        );
                     }
                     testClass.write();
                 }
+
+                saveTestProbabilities(testProbabilities);
+
             } catch (final Exception e) {
                 logger.error(e.getMessage(), e);
                 throw new MojoExecutionException(e.getMessage(), e);
@@ -144,11 +155,9 @@ public class FlakimeMojo extends AbstractMojo {
 
     private void instrument(TestMethod testMethod,Strategy strategyImpl,File outputDirectory,String disableFlagName, double flakeRate,boolean disableReport){
         try{
-            FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName,
-                    flakeRate,disableReport);
+            FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName, flakeRate,disableReport);
         }catch (Exception e){
-            getLog().warn(String.format("Failed to instrument method %s: %s", testMethod.getName(),
-                    e.getMessage()));
+            getLog().warn(String.format("Failed to instrument method %s: %s", testMethod.getName(), e.getMessage()));
         }
     }
     /**
@@ -183,6 +192,31 @@ public class FlakimeMojo extends AbstractMojo {
             return directory;
         } else {
             return new File(mavenProject.getBasedir(), path);
+        }
+    }
+
+    private void saveTestProbabilities(Map<String, Double> testProbabilities){
+        File file = new File(outputDirectory, "test_probabilities.csv");
+        if(!file.getParentFile().mkdirs()){
+            getLog().error("Failed to create output summary file: " + file.getAbsolutePath());
+        }
+
+        try(BufferedWriter writer =new BufferedWriter(new FileWriter(file))){
+             writer.write("name,probability");
+             writer.newLine();
+
+             for(Map.Entry<String, Double> entry: testProbabilities.entrySet()){
+                 writer.write(String.format("%s,%.4f", entry.getKey(), entry.getValue()));
+                 writer.newLine();
+             }
+
+            writer.flush();
+        } catch (IOException e) {
+            getLog().error(String.format(
+                    "Failed to write summary file '%s': %s",
+                    file.getAbsolutePath(),
+                    e.getMessage()
+            ));
         }
     }
 }
