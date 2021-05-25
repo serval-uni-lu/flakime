@@ -202,13 +202,13 @@ public class FlakimeMojo extends AbstractMojo {
         }
 
         try(BufferedWriter writer =new BufferedWriter(new FileWriter(file))){
-             writer.write("name,probability");
-             writer.newLine();
+            writer.write("name;probability");
+            writer.newLine();
 
-             for(Map.Entry<String, Double> entry: testProbabilities.entrySet()){
-                 writer.write(String.format("%s,%.4f", entry.getKey(), entry.getValue()));
-                 writer.newLine();
-             }
+            for(Map.Entry<String, Double> entry: testProbabilities.entrySet()){
+                writer.write(String.format("%s;%.4f", entry.getKey(), entry.getValue()));
+                writer.newLine();
+            }
 
             writer.flush();
         } catch (IOException e) {

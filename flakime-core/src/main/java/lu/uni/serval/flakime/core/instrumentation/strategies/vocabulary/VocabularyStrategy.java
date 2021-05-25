@@ -29,6 +29,7 @@ public class VocabularyStrategy implements Strategy {
     private String pathToModel;
     private boolean trainModel;
     private Map<Integer, Double> probabilitiesPerStatement;
+    private Map<String,Double> probabilityPerTestMethod;
     private Map<String,Map<Integer,Double>> probabilitiesPerTestMethod;
     private static final Model.Implementation MODEL_IMPLEMENTATION = Model.Implementation.WEKA;
     private double maxProba = 0;
@@ -46,6 +47,7 @@ public class VocabularyStrategy implements Strategy {
     @Override
     public void preProcess(final Project project,double flakeRate) throws Exception {
         probabilitiesPerTestMethod = new HashMap<>();
+        probabilityPerTestMethod = new HashMap<>();
         final InputStream dataSource = VocabularyStrategy.class.getClassLoader()
                 .getResourceAsStream("data/vocabulary.json");
         final TrainingData trainingData = new TrainingData(dataSource);
@@ -71,13 +73,15 @@ public class VocabularyStrategy implements Strategy {
 
         for (TestClass tc: project){
             for(TestMethod tm: tc){
-                double temp = getTestFlakinessProbability(tm,1);
+                double temp = computeTestFlakinessProbability(tm);
                 probabilitiesPerTestMethod.put(tm.getName(),this.probabilitiesPerStatement);
+                probabilityPerTestMethod.put(tm.getName(),temp);
                 if(temp > this.maxProba)
                     this.maxProba = temp;
             }
         }
 
+        probabilityPerTestMethod.replaceAll((k,v) -> v/this.maxProba);
 
     }
 
@@ -97,15 +101,7 @@ public class VocabularyStrategy implements Strategy {
         return 0.0;
     }
 
-    /**
-     * Computes the overall test flakiness probability.
-     *
-     * @param test The targeted test to extract the flakiness probability from
-     * @return The probability of being flaky
-     */
-    @Override
-    public double getTestFlakinessProbability(TestMethod test, double flakeRate) {
-
+    public double computeTestFlakinessProbability(TestMethod test){
         double testFlakinessProbability;
 
         try {
@@ -131,7 +127,18 @@ public class VocabularyStrategy implements Strategy {
             testFlakinessProbability = 0.0;
         }
 
-        return testFlakinessProbability * flakeRate;
+        return testFlakinessProbability ;
+    }
+
+    /**
+     * Computes the overall test flakiness probability.
+     *
+     * @param test The targeted test to extract the flakiness probability from
+     * @return The probability of being flaky
+     */
+    @Override
+    public double getTestFlakinessProbability(TestMethod test, double flakeRate) {
+        return this.probabilityPerTestMethod.get(test.getName());
     }
 
     /**
@@ -163,7 +170,7 @@ public class VocabularyStrategy implements Strategy {
 
         for (Integer statementNum : test.getStatementLineNumbers()) {
             double unNormalizedP = this.probabilitiesPerStatement.get(statementNum); // proba de flakiness until
-                                                                                     // linenumber
+            // linenumber
 
             double statementProbabilityNormalized = 0.0; // Proportion of the block proba wrt
             if(totalProbabilities != 0)
