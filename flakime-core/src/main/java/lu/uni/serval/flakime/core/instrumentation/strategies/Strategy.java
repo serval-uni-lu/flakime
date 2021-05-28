@@ -14,6 +14,7 @@ public interface Strategy {
      * Method used to initialize the probability calculation strategy.
      *
      * @param p The target project
+     * @param flakeRate the flakeRate
      * @throws Exception If something fails during preprocess
      */
     void preProcess(Project p,double flakeRate) throws Exception;
