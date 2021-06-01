@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.instrumentation.strategies;
+package lu.uni.serval.flakime.core.instrumentation.models;
 
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestMethod;
@@ -9,7 +9,7 @@ import lu.uni.serval.flakime.core.data.TestMethod;
  * and the flakiness probability of each composing statements. A statement is identified by its enclosing {@code TestMethod.class} and
  * its corresponding {@code lineNumber}.
  */
-public interface Strategy {
+public interface Model {
     /**
      * Method used to initialize the probability calculation strategy.
      *

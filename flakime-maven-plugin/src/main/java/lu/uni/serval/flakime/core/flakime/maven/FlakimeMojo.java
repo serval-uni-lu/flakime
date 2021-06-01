@@ -6,8 +6,8 @@ import lu.uni.serval.flakime.core.data.TestClass;
 import lu.uni.serval.flakime.core.data.TestMethod;
 import lu.uni.serval.flakime.core.flakime.maven.utils.MavenLogger;
 import lu.uni.serval.flakime.core.instrumentation.FlakimeInstrumenter;
-import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
-import lu.uni.serval.flakime.core.instrumentation.strategies.StrategyFactory;
+import lu.uni.serval.flakime.core.instrumentation.models.Model;
+import lu.uni.serval.flakime.core.instrumentation.models.ModelFactory;
 
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
@@ -32,8 +32,8 @@ public class FlakimeMojo extends AbstractMojo {
     @Parameter(property = "project", readonly = true)
     MavenProject mavenProject;
 
-    @Parameter(defaultValue = "uniformDistribution", property = "flakime.strategy")
-    String strategy;
+    @Parameter(defaultValue = "uniformDistribution", property = "flakime.model")
+    String model;
 
     @Parameter(defaultValue = "false",property = "flakime.disableReport")
     boolean disableReport;
@@ -57,7 +57,7 @@ public class FlakimeMojo extends AbstractMojo {
     private String testSourceDirectory;
 
     @Parameter
-    private Properties strategyParameters;
+    private Properties modelParameters;
 
     @Parameter(defaultValue = "${project.build.directory}/flakime", property = "flakime.outputDirectory")
     private File outputDirectory;
@@ -72,7 +72,7 @@ public class FlakimeMojo extends AbstractMojo {
      * Plugin mojo entry point. The method iterates over all test-classes contained
      * in the project. For each of the test classes the method iterates over all the
      * test method (annotated by @test). Finally the method calculates the flakiness
-     * probability of the given test method following the given strategy. If the
+     * probability of the given test method following the given model. If the
      * test flakiness probability is greater than the flakerate, the test method is
      * instrumented. Otherwise the test method is skipped.
      *
@@ -83,14 +83,14 @@ public class FlakimeMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
-        Strategy strategyImpl = null;
+        Model modelImpl = null;
         Log logger = getLog();
 
         if(!skip)
             try {
                 final MavenLogger mavenLogger = new MavenLogger(logger);
 
-                initialiseStrategyProperties();
+                initialiseModelProperties();
 
                 final Project project = initializeProject(mavenProject, mavenLogger);
 
@@ -100,20 +100,20 @@ public class FlakimeMojo extends AbstractMojo {
 
                 initializeFilters();
 
-                strategyImpl = StrategyFactory.fromName(strategy, strategyParameters, mavenLogger);
+                modelImpl = ModelFactory.fromName(model, modelParameters, mavenLogger);
                 logger.info("Test source directory : "+testSourceDirectory);
                 logger.info("Test bin directory : "+testClassDirectory);
                 logger.info("Annotation Filters :["+String.join(",", annotationFilters)+"]");
                 logger.info("Method Filters :["+String.join(",", methodFilters)+"]");
                 logger.info("Class Filters :["+String.join(",", classFilters)+"]");
-                logger.info(String.format("Strategy %s loaded", strategyImpl.getClass().getName()));
+                logger.info(String.format("Model %s loaded", modelImpl.getClass().getName()));
                 logger.info(String.format("FlakeRate: %f", flakeRate));
 
                 int ntests = project.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum);
                 logger.info(String.format("Found %d classes with %d tests", project.getNumberClasses(),ntests));
-                logger.debug(String.format("Running preProcess of %s", strategyImpl.getClass().getSimpleName()));
+                logger.debug(String.format("Running preProcess of %s", modelImpl.getClass().getSimpleName()));
 
-                strategyImpl.preProcess(project,flakeRate);
+                modelImpl.preProcess(project,flakeRate);
 
                 final Map<String, Double> testProbabilities = new HashMap<>();
 
@@ -121,10 +121,10 @@ public class FlakimeMojo extends AbstractMojo {
                     logger.debug(String.format("Process class %s", testClass.getName()));
                     for (TestMethod testMethod : testClass) {
                         logger.debug(String.format("\tProcess method %s", testMethod.getName()));
-                        instrument(testMethod, strategyImpl, outputDirectory, disableFlagName, flakeRate,disableReport);
+                        instrument(testMethod, modelImpl, outputDirectory, disableFlagName, flakeRate,disableReport);
                         testProbabilities.put(
                                 testMethod.getLongName(),
-                                strategyImpl.getTestFlakinessProbability(testMethod, 1.)
+                                modelImpl.getTestFlakinessProbability(testMethod, 1.)
                         );
                     }
                     testClass.write();
@@ -136,8 +136,8 @@ public class FlakimeMojo extends AbstractMojo {
                 logger.error(e.getMessage(), e);
                 throw new MojoExecutionException(e.getMessage(), e);
             } finally {
-                if (strategyImpl != null) {
-                    strategyImpl.postProcess();
+                if (modelImpl != null) {
+                    modelImpl.postProcess();
                 }
             }
     }
@@ -153,9 +153,9 @@ public class FlakimeMojo extends AbstractMojo {
         }
     }
 
-    private void instrument(TestMethod testMethod,Strategy strategyImpl,File outputDirectory,String disableFlagName, double flakeRate,boolean disableReport){
+    private void instrument(TestMethod testMethod, Model modelImpl, File outputDirectory, String disableFlagName, double flakeRate, boolean disableReport){
         try{
-            FlakimeInstrumenter.instrument(testMethod, strategyImpl, outputDirectory, disableFlagName, flakeRate,disableReport);
+            FlakimeInstrumenter.instrument(testMethod, modelImpl, outputDirectory, disableFlagName, flakeRate,disableReport);
         }catch (Exception e){
             getLog().warn(String.format("Failed to instrument method %s: %s", testMethod.getName(), e.getMessage()));
         }
@@ -179,9 +179,9 @@ public class FlakimeMojo extends AbstractMojo {
                 getDirectory(testSourceDirectory), mavenProject.getTestClasspathElements());
     }
 
-    private void initialiseStrategyProperties(){
-        this.strategyParameters = Optional.ofNullable(strategyParameters).orElse(new Properties());
-        this.strategyParameters.putIfAbsent("modelPath",mavenProject.getBuild().getDirectory()+"/rfc_classifier");
+    private void initialiseModelProperties(){
+        this.modelParameters = Optional.ofNullable(modelParameters).orElse(new Properties());
+        this.modelParameters.putIfAbsent("modelPath",mavenProject.getBuild().getDirectory()+"/rfc_classifier");
 
     }
 

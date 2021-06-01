@@ -1,9 +1,9 @@
-package lu.uni.serval.flakime.core.instrumentation.strategies.uniform;
+package lu.uni.serval.flakime.core.instrumentation.models.uniform;
 
 import java.util.Collections;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestMethod;
-import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
+import lu.uni.serval.flakime.core.instrumentation.models.Model;
 import lu.uni.serval.flakime.core.utils.Logger;
 
 /**
@@ -15,10 +15,10 @@ import lu.uni.serval.flakime.core.utils.Logger;
  * The probability p is calculated by multiplying the proportion of executed lines of code wrt overall number of lines of code in the method body
  * by the pre-set flake rate
  */
-public class UniformDistrubtionStrategy implements Strategy {
+public class UniformDistrubtionModel implements Model {
     private final Logger logger;
 
-    public UniformDistrubtionStrategy(Logger logger) {
+    public UniformDistrubtionModel(Logger logger) {
         this.logger = logger;
     }
 

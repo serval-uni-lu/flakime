@@ -5,9 +5,10 @@ import java.time.Instant;
 import java.util.Set;
 import javassist.CannotCompileException;
 import javassist.CtClass;
-import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
+import lu.uni.serval.flakime.core.instrumentation.models.Model;
 import lu.uni.serval.flakime.core.data.TestMethod;
-import lu.uni.serval.flakime.core.instrumentation.strategies.uniform.UniformDistrubtionStrategy;
+import lu.uni.serval.flakime.core.instrumentation.models.uniform.UniformDistrubtionModel;
+import lu.uni.serval.flakime.core.instrumentation.models.vocabulary.VocabularyModel;
 
 /**
  * Executor to perform transformation.
@@ -27,14 +28,14 @@ public class FlakimeInstrumenter {
      * Method that triggers the computation of the payload and insert it at the given source code position
      *
      * @param testMethod The targeted test method
-     * @param strategy The strategy to use (see {@link lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary.VocabularyStrategy}, {@link UniformDistrubtionStrategy}
+     * @param model The strategy to use (see {@link VocabularyModel}, {@link UniformDistrubtionModel}
      * @param outputDir The directory where the flake position report file will be written
      * @param disableFlag The environment variable name that control if the flake will occur
      * @param flakeRate The flake rate
      * @param disableReport flag to disable report or not.
      * @throws CannotCompileException if the source code compilation Fails
      */
-    public static void instrument(TestMethod testMethod, Strategy strategy, File outputDir,String disableFlag,double flakeRate,boolean disableReport)
+    public static void instrument(TestMethod testMethod, Model model, File outputDir, String disableFlag, double flakeRate, boolean disableReport)
             throws CannotCompileException{
         testMethod.addLocalVariable(RANDOM_VARIABLE_NAME, CtClass.doubleType);
         testMethod.insertBefore(String.format("%s = Math.random();", RANDOM_VARIABLE_NAME));
@@ -44,7 +45,7 @@ public class FlakimeInstrumenter {
 
         Set<Integer> statementLineNumbers = testMethod.getStatementLineNumbers();
             for (int lineNumber : statementLineNumbers) {
-                final String payload = computePayload(testMethod, strategy, lineNumber,outputDir,flakeRate,disableReport);
+                final String payload = computePayload(testMethod, model, lineNumber,outputDir,flakeRate,disableReport);
                 testMethod.insertAt(lineNumber+1,payload);
             }
 
@@ -58,13 +59,13 @@ public class FlakimeInstrumenter {
      * Method to compute the effective payload to be injected in the test method
      *
      * @param testMethod The targeted test method
-     * @param strategy   The flakiness probability calculation strategy
+     * @param model   The flakiness probability calculation strategy
      * @param lineNumber The line number corresponding to the execution statement
      * @return The effective source code string to be injected.
      */
-    private static String computePayload(TestMethod testMethod, Strategy strategy, int lineNumber,File outputDir,double flakeRate,boolean disableReport) {
+    private static String computePayload(TestMethod testMethod, Model model, int lineNumber, File outputDir, double flakeRate, boolean disableReport) {
         final StringBuilder result = new StringBuilder();
-        double probability = strategy.getTestFlakinessProbability(testMethod, lineNumber,flakeRate);
+        double probability = model.getTestFlakinessProbability(testMethod, lineNumber,flakeRate);
         String path = outputDir.getAbsolutePath().replace("\\","\\\\");
 
         String fileWritterString = "";

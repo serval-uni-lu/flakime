@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary;
+package lu.uni.serval.flakime.core.instrumentation.models.vocabulary;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,22 +18,22 @@ import javassist.bytecode.analysis.ControlFlow;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestClass;
 import lu.uni.serval.flakime.core.data.TestMethod;
-import lu.uni.serval.flakime.core.instrumentation.strategies.Strategy;
 import lu.uni.serval.flakime.core.utils.Logger;
 
-public class VocabularyStrategy implements Strategy {
+public class VocabularyModel
+        implements lu.uni.serval.flakime.core.instrumentation.models.Model {
     private final Logger logger;
     private int nTrees;
     private int nThreads;
-    private Model model;
+    private lu.uni.serval.flakime.core.instrumentation.models.vocabulary.Model model;
     private String pathToModel;
     private boolean trainModel;
     private Map<Integer, Double> probabilitiesPerStatement;
     private Map<String,Double> probabilityPerTestMethod;
     private Map<String,Map<Integer,Double>> probabilitiesPerTestMethod;
-    private static final Model.Implementation MODEL_IMPLEMENTATION = Model.Implementation.WEKA;
+    private static final lu.uni.serval.flakime.core.instrumentation.models.vocabulary.Model.Implementation MODEL_IMPLEMENTATION = lu.uni.serval.flakime.core.instrumentation.models.vocabulary.Model.Implementation.WEKA;
     private double maxProba = 0;
-    public VocabularyStrategy(Logger logger) {
+    public VocabularyModel(Logger logger) {
         this.logger = logger;
     }
 
@@ -48,7 +48,8 @@ public class VocabularyStrategy implements Strategy {
     public void preProcess(final Project project,double flakeRate) throws Exception {
         probabilitiesPerTestMethod = new HashMap<>();
         probabilityPerTestMethod = new HashMap<>();
-        final InputStream dataSource = VocabularyStrategy.class.getClassLoader()
+        probabilityPerTestMethod = new HashMap<>();
+        final InputStream dataSource = VocabularyModel.class.getClassLoader()
                 .getResourceAsStream("data/vocabulary.json");
         final TrainingData trainingData = new TrainingData(dataSource);
         final Set<String> additionalTrainingText = new HashSet<>();

@@ -1,19 +1,17 @@
 ![build](https://github.com/UL-SnT-Serval/flakime/actions/workflows/build.yml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-
 # Flakime 
 This project allows simulating flakiness by injecting exception during test sources compilation at computed locations.
 
 ## Usage
 The tool is packaged as a maven plugin and can be used by providing the following plugin info in the target project `pom.xml`. \
 The execution stage is set to `test-compile`.
-```
-xml
+```xml
 <plugin>
     <groupId>lu.uni.serval</groupId>
     <artifactId>flakime-maven-plugin</artifactId>
-    <version>{FLAKI_ME_VERSION}</version>
+    <version>{FLAKIME_VERSION}</version>
     <executions>
       <execution>
         <goals>
@@ -31,15 +29,14 @@ xml
 | `disableFlagName`    | string                                                 | FLAKIME_DISABLE       |          | The environment variable name of the flag disabling flakime   |
 | `disableReport`      | boolean                                                | false                 |          | Allows to disable the generation of output files reporting the flake point for each test methods
 | `flakeRate`          | float: 0..1                                            | 0.1                  |          | The threshold at which to consider a test with non-null probability to flake   |
-| `strategy`           | string: {vocabulary,bernoulli}                         | bernoulli             |          | The strategy with which the flakiness probability of a test will be calculated |
-| `testAnnotations`    | Array of string                                        | default for Junit v4 and v5                    |       | The Test annotations used in the test suite preceeded by `@`                   |
-| `strategyParameters` | Array of key-value property                            | none                  |          | The parameters specific to each strategy implementation (see desc. bellow)     |
+| `model`           | string: {vocabulary,bernoulli}                         | bernoulli             |          | The model with which the flakiness probability of a test will be calculated |
+| `testAnnotations`    | Array of string                                        | default for Junit v4 and v5                    |       | The Test annotations used in the test suite preceded by `@`                   |
+| `modelParameters` | Array of key-value property                            | none                  |          | The parameters specific to each model implementation (see desc. bellow)     |
 | `testPattern` | regex String                            | none                  |          | The regex used to identify tests in test classes (if no annotation were used)     |
 | `skip` | boolean                           | false                  |          | Skip flakime execution|  
-
 <br>
 
-## Vocabulary strategy parameters :
+## Vocabulary model parameters :
 | key                   | value implementation & range | default                                            | required                            | description                                                                                               |
 |-----------------------|--------------------|----------------------------------------------------|-------------------------------------|-----------------------------------------------------------------------------------------------------------|
 | `modelPath`           | string             |   None                                                 |  | The path to the pre-trained serialized model, if not present a new model will be trained                                                             |
@@ -50,7 +47,7 @@ xml
 ```xml
 <configuration>
   <flakeRate>0.99</flakeRate>
-  <strategy>vocabulary</strategy>
+  <model>vocabulary</model>
   <testAnnotations>
     <annotation>@org.junit.jupiter.api.Test</annotation>
     <annotation>@org.junit.Test</annotation>

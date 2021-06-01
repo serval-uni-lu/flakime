@@ -1,15 +1,15 @@
-package lu.uni.serval.flakime.core.instrumentation.strategies;
+package lu.uni.serval.flakime.core.instrumentation.models;
 
-import lu.uni.serval.flakime.core.instrumentation.strategies.uniform.UniformDistrubtionStrategy;
-import lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary.VocabularyStrategy;
+import lu.uni.serval.flakime.core.instrumentation.models.uniform.UniformDistrubtionModel;
+import lu.uni.serval.flakime.core.instrumentation.models.vocabulary.VocabularyModel;
 import lu.uni.serval.flakime.core.utils.Logger;
 
 import java.io.FileNotFoundException;
 import java.util.Properties;
 
-public class StrategyFactory {
+public class ModelFactory {
 
-    private StrategyFactory() throws IllegalAccessException {
+    private ModelFactory() throws IllegalAccessException {
         throw new IllegalAccessException("Strategy Factory should not be instantiated");
     }
 
@@ -24,9 +24,9 @@ public class StrategyFactory {
      * @throws ClassNotFoundException Thrown if the requested strategy does not exists
      * @throws FileNotFoundException Thrown if the file corresponding to the model is not found.
      */
-    public static Strategy fromName(String name, Properties properties, Logger logger) throws ClassNotFoundException, FileNotFoundException {
+    public static Model fromName(String name, Properties properties, Logger logger) throws ClassNotFoundException, FileNotFoundException {
         if(name.trim().equalsIgnoreCase("uniformDistribution")){
-            return  new UniformDistrubtionStrategy(logger);
+            return  new UniformDistrubtionModel(logger);
         }
 
         if (name.trim().equalsIgnoreCase("vocabulary")){
@@ -38,7 +38,7 @@ public class StrategyFactory {
 
             pathModel = properties.getProperty("modelPath");
 
-            final VocabularyStrategy strategy = new VocabularyStrategy(logger);
+            final VocabularyModel strategy = new VocabularyModel(logger);
             strategy.setnThreads(Integer.parseInt(nCores));
             strategy.setnTrees(Integer.parseInt(nTrees));
             strategy.setTrainModel(trainModel);

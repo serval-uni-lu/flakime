@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.instrumentation.strategies.vocabulary;
+package lu.uni.serval.flakime.core.instrumentation.models.vocabulary;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
