@@ -57,7 +57,7 @@ public class TestClass implements Iterable<TestMethod> {
      * @param m method that is evaluated
      * @return True if the method annotation is in {@code testAnnotations}
      */
-    private boolean isTest(CtMethod m) {
+    public boolean isTest(CtMethod m) {
         String methodName = m.getName();
 
         if(m.getMethodInfo().isConstructor()){

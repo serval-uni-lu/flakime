@@ -69,12 +69,9 @@ public class FlakimeMojo extends AbstractMojo {
     private boolean skip;
 
     /**
-     * Plugin mojo entry point. The method iterates over all test-classes contained
-     * in the project. For each of the test classes the method iterates over all the
-     * test method (annotated by @test). Finally the method calculates the flakiness
-     * probability of the given test method following the given model. If the
-     * test flakiness probability is greater than the flakerate, the test method is
-     * instrumented. Otherwise the test method is skipped.
+     * Plugin entry point.
+     * This method initialize the selected model, apply the method and class filters and trigger the injection.
+     *
      *
      *
      * @throws MojoExecutionException Thrown if any of the steps throws an exception

@@ -1,0 +1,6 @@
+# Project exclude paths
+/target/
+**/.idea
+rfc_classifier
+**.iml
+**.txt

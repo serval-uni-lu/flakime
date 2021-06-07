@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import lu.uni.serval.flakime.core.utils.Logger;
+import lu.uni.serval.flakime.core.utils.*;
 import lu.uni.serval.flakime.core.utils.NameFilter;
 import org.apache.commons.io.FileUtils;
 
@@ -24,7 +24,33 @@ public class Project implements Iterable<TestClass> {
     private final List<TestClass> testClasses;
 
     public Project(Logger logger, Set<String> annotationFilters, Set<String> methodFilters, Set<String> classFilters, File classDirectory, File sourceDirectory, List<String> dependencies) throws NotFoundException {
-        this.logger = logger;
+
+        if (logger == null){
+            this.logger = new Logger() {
+                @Override
+                public void info(String message) {
+
+                }
+
+                @Override
+                public void warn(String message) {
+
+                }
+
+                @Override
+                public void debug(String message) {
+
+                }
+
+                @Override
+                public void error(String message) {
+
+                }
+            };
+        } else {
+            this.logger = logger;
+        }
+
         this.annotationFilters = new NameFilter(annotationFilters);
         this.methodFilters = new NameFilter(methodFilters);
         this.classFilters = new NameFilter(classFilters);
