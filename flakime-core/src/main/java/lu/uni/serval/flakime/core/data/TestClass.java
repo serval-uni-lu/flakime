@@ -64,7 +64,7 @@ public class TestClass implements Iterable<TestMethod> {
             return false;
         }
 
-        if(!this.methodFilters.matches(methodName)){
+        if(this.methodFilters.hasRules() || !this.methodFilters.matches(methodName)){
             return false;
         }
 

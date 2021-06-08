@@ -42,7 +42,7 @@ public class TestMethod {
      * @param ctMethod   Instance of javassist {@code CtMethod.class}
      * @param sourceCode Instance of {@code File.class} pointing the method source
      *                   files
-     * @param declaringClass The declaringClass fo this test mehtod
+     * @param declaringClass The declaringClass fo this test method
      * @throws BadBytecode Thrown if the bytecode is malformed
      */
     public TestMethod(Logger logger, CtMethod ctMethod, File sourceCode, CtClass declaringClass) throws BadBytecode {
