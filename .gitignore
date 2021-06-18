@@ -27,8 +27,8 @@ hs_err_pid*
 **/*.iml
 
 # Java target
-**/target
-
+flakime-core/target
+flakime-maven-plugin/target
 **/.project
 **/.classpath
 

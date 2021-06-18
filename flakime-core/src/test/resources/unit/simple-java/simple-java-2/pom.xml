@@ -46,31 +46,31 @@
                 </configuration>
             </plugin>
 
-            <plugin>
-                <groupId>lu.uni.serval</groupId>
-                <artifactId>flakime-maven-plugin</artifactId>
-                <version>0.1.0-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>flakime-injector</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <flakeRate>1</flakeRate>
-                    <strategy>bernoulli</strategy>
-                    <testAnnotations>
-                        <annotation>@org.junit.jupiter.api.Test</annotation>
-                    </testAnnotations>
-                    <strategyParameters>
-                        <trainModel>false</trainModel>
-                        <modelPath>rfc_classifier</modelPath>
-                        <randomForestTrees>100</randomForestTrees>
-                        <randomForestThreads>12</randomForestThreads>
-                    </strategyParameters>
-                </configuration>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>lu.uni.serval</groupId>-->
+<!--                <artifactId>flakime-maven-plugin</artifactId>-->
+<!--                <version>0.1.0-SNAPSHOT</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <goals>-->
+<!--                            <goal>flakime-injector</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--                <configuration>-->
+<!--                    <flakeRate>1</flakeRate>-->
+<!--                    <strategy>bernoulli</strategy>-->
+<!--                    <testAnnotations>-->
+<!--                        <annotation>@org.junit.jupiter.api.Test</annotation>-->
+<!--                    </testAnnotations>-->
+<!--                    <strategyParameters>-->
+<!--                        <trainModel>false</trainModel>-->
+<!--                        <modelPath>rfc_classifier</modelPath>-->
+<!--                        <randomForestTrees>100</randomForestTrees>-->
+<!--                        <randomForestThreads>12</randomForestThreads>-->
+<!--                    </strategyParameters>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 

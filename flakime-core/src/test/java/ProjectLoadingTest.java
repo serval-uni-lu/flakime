@@ -14,11 +14,6 @@ public class ProjectLoadingTest {
     SimpleJavaStub stub = new SimpleJavaStub();
 
     @Test
-    void testLoadingStub(){
-        stub.getBasedir();
-    }
-
-    @Test
     void nofilter_projectLoadTest() throws NotFoundException, IOException, URISyntaxException {
         Project p = Utils.createProject_noFilter();
         assertEquals(4, p.getTestClasses().size());
@@ -29,16 +24,16 @@ public class ProjectLoadingTest {
     void junitAnnotation_projectLoadTest() throws NotFoundException, IOException, URISyntaxException {
         Project p = Utils.createProject_junitAnnotation();
         assertEquals(4, p.getTestClasses().size());
-        assertEquals(10,p.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum));
+        assertEquals(12,p.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum));
     }
 
-    @Test
-    void isTest_Test() throws NotFoundException, IOException, URISyntaxException {
-        Project p = Utils.createProject_junitAnnotation();
-        TestClass testClass = p.getTestClasses().stream().filter(tc -> tc.getName().contains("MathUtilsTest")).findAny().get();
-        TestMethod testMethod = testClass.getTestMethods().stream().filter(tm -> tm.getName().contains("main")).findAny().get();
-        assertFalse(testClass.isTest(testMethod.getCtMethod()));
-    }
+//    @Test
+//    void isTest_Test() throws NotFoundException, IOException, URISyntaxException {
+//        Project p = Utils.createProject_junitAnnotation();
+//        TestClass testClass = p.getTestClasses().stream().filter(tc -> tc.getName().contains("MathUtilsTest")).findAny().get();
+//        TestMethod testMethod = testClass.getTestMethods().stream().filter(tm -> tm.getName().contains("main")).findAny().get();
+//        assertFalse(testClass.isTest(testMethod.getCtMethod()));
+//    }
 
     }
 
