@@ -1,3 +1,4 @@
+import static junit.framework.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -29,13 +30,13 @@ public class ProjectLoadingTest {
         assertEquals(12,p.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum));
     }
 
-//    @Test
-//    void isTest_Test() throws NotFoundException, IOException, URISyntaxException {
-//        Project p = Utils.createProject_junitAnnotation();
-//        TestClass testClass = p.getTestClasses().stream().filter(tc -> tc.getName().contains("MathUtilsTest")).findAny().get();
-//        TestMethod testMethod = testClass.getTestMethods().stream().filter(tm -> tm.getName().contains("main")).findAny().get();
-//        assertFalse(testClass.isTest(testMethod.getCtMethod()));
-//    }
+    @Test
+    void isTest_Test() throws NotFoundException, IOException, URISyntaxException, MavenInvocationException {
+        Project p = Utils.createProject_junitAnnotation();
+        TestClass testClass = p.getTestClasses().stream().filter(tc -> tc.getName().contains("MathUtilsTest")).findAny().get();
+        TestMethod testMethod = testClass.getTestMethods().stream().filter(tm -> tm.getName().contains("main")).findAny().get();
+        assertTrue(testClass.isTest(testMethod.getCtMethod()));
+    }
 
     }
 
