@@ -1,10 +1,12 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
+import org.apache.maven.shared.invoker.*;
 import org.codehaus.plexus.util.ReaderFactory;
 
 public class SimpleJavaStub
@@ -13,8 +15,17 @@ public class SimpleJavaStub
     /**
      * Default constructor
      */
-    public SimpleJavaStub()
-    {
+
+    private static SimpleJavaStub simpleJavaStub_instance;
+
+    public static SimpleJavaStub getInstance() throws MavenInvocationException {
+        if (simpleJavaStub_instance == null)
+            simpleJavaStub_instance = new SimpleJavaStub();
+
+        return simpleJavaStub_instance;
+    }
+
+    private void initStub(){
         MavenXpp3Reader pomReader = new MavenXpp3Reader();
         Model model;
         try
@@ -51,6 +62,24 @@ public class SimpleJavaStub
         List testCompileSourceRoots = new ArrayList();
         testCompileSourceRoots.add( getBasedir() + "/src/test/java" );
         setTestCompileSourceRoots( testCompileSourceRoots );
+    }
+
+    private void install_project() throws MavenInvocationException {
+        InvocationRequest request = new DefaultInvocationRequest();
+        request.setPomFile(new File( getBasedir(), "pom.xml" ));
+        request.setGoals(Arrays.asList("clean","install"));
+        Invoker invoker = new DefaultInvoker();
+
+        InvocationResult result = invoker.execute(request);
+
+        if (result.getExitCode() != 0){
+            throw new IllegalStateException("Build failed");
+        }
+    }
+
+    private SimpleJavaStub() throws MavenInvocationException {
+        initStub();
+        install_project();
     }
 
     /** {@inheritDoc} */

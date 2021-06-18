@@ -15,6 +15,7 @@ import javassist.NotFoundException;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.utils.Logger;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 
 public class Utils {
     static Logger logger = new lu.uni.serval.flakime.core.utils.Logger() {
@@ -40,8 +41,8 @@ public class Utils {
     };
 
     public static Project createProject_noFilter()
-            throws IOException, URISyntaxException, NotFoundException {
-        SimpleJavaStub simpleJavaStub = new SimpleJavaStub();
+            throws IOException, URISyntaxException, NotFoundException, MavenInvocationException {
+        SimpleJavaStub simpleJavaStub = SimpleJavaStub.getInstance();
 
         return new Project(
                 logger,
@@ -56,9 +57,9 @@ public class Utils {
     }
 
     public static Project createProject_junitAnnotation()
-            throws IOException, URISyntaxException, NotFoundException {
+            throws IOException, URISyntaxException, NotFoundException, MavenInvocationException {
 //        File f = unzip(getResourceFile("test-classes.zip"));
-        SimpleJavaStub simpleJavaStub = new SimpleJavaStub();
+        SimpleJavaStub simpleJavaStub = SimpleJavaStub.getInstance();
 
         return new Project(
                 logger,

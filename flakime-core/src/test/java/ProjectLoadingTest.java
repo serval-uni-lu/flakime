@@ -7,21 +7,23 @@ import javassist.NotFoundException;
 import lu.uni.serval.flakime.core.data.Project;
 import lu.uni.serval.flakime.core.data.TestClass;
 import lu.uni.serval.flakime.core.data.TestMethod;
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class ProjectLoadingTest {
 
-    SimpleJavaStub stub = new SimpleJavaStub();
-
     @Test
-    void nofilter_projectLoadTest() throws NotFoundException, IOException, URISyntaxException {
+    void nofilter_projectLoadTest() throws NotFoundException, IOException, URISyntaxException, MavenInvocationException {
         Project p = Utils.createProject_noFilter();
         assertEquals(4, p.getTestClasses().size());
         assertEquals(12,p.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum));
     }
 
     @Test
-    void junitAnnotation_projectLoadTest() throws NotFoundException, IOException, URISyntaxException {
+    void junitAnnotation_projectLoadTest() throws NotFoundException, IOException, URISyntaxException, MavenInvocationException {
         Project p = Utils.createProject_junitAnnotation();
         assertEquals(4, p.getTestClasses().size());
         assertEquals(12,p.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum));

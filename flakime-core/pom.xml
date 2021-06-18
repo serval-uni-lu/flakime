@@ -30,6 +30,9 @@
                         <exclude>unit/simple-java/simple-java-2/target/test-classes/org/example/*.java</exclude>
 <!--                        <exclude>**/resources/*</exclude>-->
                     </excludes>
+                    <systemPropertyVariables>
+                        <maven.home>${maven.home}</maven.home>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -66,7 +69,11 @@
             <artifactId>javassist</artifactId>
             <version>${javaassist.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-invoker</artifactId>
+            <version>3.1.0</version>
+        </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
