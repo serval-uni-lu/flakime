@@ -8,7 +8,7 @@ on:
 jobs:
   coverage:
     runs-on: ubuntu-latest
-    name: Jacoco analysis (Java 8)
+    name: Jacoco analysis (Java 11)
 
     steps:
       - uses: actions/checkout@v2

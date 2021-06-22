@@ -53,7 +53,7 @@ class InstrumenterTest {
         TestMethod m_testMethod = mock(TestMethod.class);
         Model m_model = mock(Model.class);
         when(m_model.getTestFlakinessProbability(m_testMethod,lineNumber,1.0)).thenReturn(0.0);
-        result = FlakimeInstrumenter.computePayload(m_testMethod,m_model,lineNumber,new File(output_dir),1.0,true);
+        result = FlakimeInstrumenter.computePayload(m_testMethod,m_model,lineNumber,new File(output_dir),1.0,false);
         assertEquals("",result);
 
     }
