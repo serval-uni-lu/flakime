@@ -8,6 +8,9 @@ import java.util.stream.Collectors;
 
 public class Utils {
 
+    private Utils(){
+
+    }
 
     /**
      * @param m The Ctmethod instance which is assesed to be a test or not

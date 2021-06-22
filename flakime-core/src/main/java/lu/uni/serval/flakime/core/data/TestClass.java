@@ -53,12 +53,6 @@ public class TestClass implements Iterable<TestMethod> {
         return this.testMethods.iterator();
     }
 
-    /**
-     * Check whether a CtMethod is a test by analysing its annotation.
-     *
-     * @param m method that is evaluated
-     * @return True if the method annotation is in {@code testAnnotations}
-     */
 //    public boolean isTest(CtMethod m) {
 //        String methodName = m.getName();
 //

@@ -83,6 +83,7 @@ public class Project implements Iterable<TestClass> {
      *
      * @param classPool the ClassPool instance to append
      * @param classDirectory A Directory of classes
+     * @param dependencies The dependency list to append to the classpool
      * @return The modified ClassPool
      * @throws NotFoundException if passed {@code classPool} is {@code null} or if passed
      *          {@code inputDir} is a JAR or ZIP and not found
