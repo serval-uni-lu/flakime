@@ -39,9 +39,10 @@ class InstrumenterTest {
         int lineNumber = 12;
         TestMethod m_testMethod = mock(TestMethod.class);
         Model m_model = mock(Model.class);
+        when(m_testMethod.getLongName()).thenReturn("org.example.test#test1()");
         when(m_model.getTestFlakinessProbability(m_testMethod,lineNumber,1.0)).thenReturn(0.5);
-        result = FlakimeInstrumenter.computePayload(m_testMethod,m_model,lineNumber,new File(output_dir),1.0,true);
-        Pattern p = Pattern.compile("^.*<\\s*0\\.5.*\\n*throw new Exception");
+        result = FlakimeInstrumenter.computePayload(m_testMethod,m_model,lineNumber,new File(output_dir),1.0,false);
+        Pattern p = Pattern.compile("^.*<\\s*0\\.5[\\s\\S]*throw new Exception.*");
         assertTrue(p.matcher(result).find());
     }
 
@@ -52,10 +53,13 @@ class InstrumenterTest {
         int lineNumber = 12;
         TestMethod m_testMethod = mock(TestMethod.class);
         Model m_model = mock(Model.class);
+        when(m_testMethod.getLongName()).thenReturn("org.example.test#test1()");
         when(m_model.getTestFlakinessProbability(m_testMethod,lineNumber,1.0)).thenReturn(0.0);
         result = FlakimeInstrumenter.computePayload(m_testMethod,m_model,lineNumber,new File(output_dir),1.0,false);
         assertEquals("",result);
-
     }
+
+
+
 
 }
