@@ -1,42 +1,67 @@
-import static junit.framework.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javassist.CtMethod;
 import javassist.NotFoundException;
 import lu.uni.serval.flakime.core.data.Project;
-import lu.uni.serval.flakime.core.data.TestClass;
-import lu.uni.serval.flakime.core.data.TestMethod;
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.InvocationRequest;
+import lu.uni.serval.flakime.core.utils.NameFilter;
 import org.apache.maven.shared.invoker.MavenInvocationException;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class ProjectLoadingTest {
+import static org.junit.jupiter.api.Assertions.*;
+
+class ProjectLoadingTest {
 
     @Test
     void nofilter_projectLoadTest() throws NotFoundException, IOException, URISyntaxException, MavenInvocationException {
         Project p = Utils.createProject_noFilter();
         assertEquals(4, p.getTestClasses().size());
-        assertEquals(12,p.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum));
+        assertEquals(9,p.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum));
     }
 
     @Test
     void junitAnnotation_projectLoadTest() throws NotFoundException, IOException, URISyntaxException, MavenInvocationException {
         Project p = Utils.createProject_junitAnnotation();
         assertEquals(4, p.getTestClasses().size());
-        assertEquals(12,p.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum));
+        assertEquals(9,p.getTestClasses().stream().reduce(0, (sub, elem) -> sub + elem.getnTestMethods(), Integer::sum));
     }
 
     @Test
-    void isTest_Test() throws NotFoundException, IOException, URISyntaxException, MavenInvocationException {
-        Project p = Utils.createProject_junitAnnotation();
-        TestClass testClass = p.getTestClasses().stream().filter(tc -> tc.getName().contains("MathUtilsTest")).findAny().get();
-        TestMethod testMethod = testClass.getTestMethods().stream().filter(tm -> tm.getName().contains("main")).findAny().get();
-        assertTrue(testClass.isTest(testMethod.getCtMethod()));
+    void isNotATestTest_annotationFilter() throws NotFoundException, IOException, URISyntaxException, MavenInvocationException {
+        Project p = Utils.createProject_noFilter();
+        CtMethod mainMethod = p.getClassPool().get("org.example.MathUtilsTest").getDeclaredMethod("main");
+        Set<String> annotationSet = Stream.of("^@org\\.junit\\.jupiter\\.api\\.Test*.","@org\\.junit\\.Test").collect(
+                Collectors.toSet());
+        assertFalse(lu.uni.serval.flakime.core.utils.Utils.isTest(mainMethod,new NameFilter(Collections.emptySet()),new NameFilter(annotationSet)));
     }
+
+    @Test
+    void isATestTest_annotationFilter() throws NotFoundException, IOException, URISyntaxException, MavenInvocationException {
+        Project p = Utils.createProject_junitAnnotation();
+        CtMethod mainMethod = p.getClassPool().get("org.example.MathUtilsTest").getDeclaredMethod("testIf");
+        Set<String> annotationSet = Stream.of("^@org\\.junit\\.jupiter\\.api\\.Test*.","@org\\.junit\\.Test").collect(
+                Collectors.toSet());
+        assertTrue(lu.uni.serval.flakime.core.utils.Utils.isTest(mainMethod,new NameFilter(Collections.emptySet()),new NameFilter(annotationSet)));
+    }
+
+    @Test
+    void isATestTest_nameFilterAnnotationFilter() throws MavenInvocationException, NotFoundException, IOException, URISyntaxException {
+        Project p = Utils.createProject_junitAnnotation();
+        CtMethod mainMethod = p.getClassPool().get("org.example.MathUtilsTest").getDeclaredMethod("main");
+        CtMethod testMethod = p.getClassPool().get("org.example.MathUtilsTest").getDeclaredMethod("testIf");
+        Set<String> annotationSet = Stream.of("^@org\\.junit\\.jupiter\\.api\\.Test*.","@org\\.junit\\.Test").collect(
+                Collectors.toSet());
+        Set<String> methodNameSet = Stream.of("^.*main").collect(Collectors.toSet());
+        assertTrue(lu.uni.serval.flakime.core.utils.Utils.isTest(mainMethod,new NameFilter(methodNameSet),new NameFilter(annotationSet)));
+        assertTrue(lu.uni.serval.flakime.core.utils.Utils.isTest(testMethod,new NameFilter(methodNameSet),new NameFilter(annotationSet)));
+
+    }
+
+
 
     }
 

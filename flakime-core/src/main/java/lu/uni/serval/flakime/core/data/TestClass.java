@@ -1,12 +1,14 @@
 package lu.uni.serval.flakime.core.data;
 
 import java.util.List;
+
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.bytecode.AttributeInfo;
 import lu.uni.serval.flakime.core.utils.Logger;
 import lu.uni.serval.flakime.core.utils.NameFilter;
+import lu.uni.serval.flakime.core.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +35,7 @@ public class TestClass implements Iterable<TestMethod> {
         this.methodFilters = methodFilters;
         this.ctClass = ctClass;
         this.outputDirectory = outputDirectory;
-        this.testMethods = Arrays.stream(ctClass.getDeclaredMethods()).filter(this::isTest)
+        this.testMethods = Arrays.stream(ctClass.getDeclaredMethods()).filter(ctMethod -> Utils.isTest(ctMethod,methodFilters,annotationFilters))
                 .map(m -> TestMethodFactory.create(logger, m, sourceFile, this.ctClass)).filter(Objects::nonNull)
                 .filter(tm -> tm.getCtMethod().getMethodInfo().getCodeAttribute() != null).collect(Collectors.toList());
 
@@ -57,29 +59,29 @@ public class TestClass implements Iterable<TestMethod> {
      * @param m method that is evaluated
      * @return True if the method annotation is in {@code testAnnotations}
      */
-    public boolean isTest(CtMethod m) {
-        String methodName = m.getName();
-
-        if(m.getMethodInfo().isConstructor()){
-            return false;
-        }
-
-        if(this.methodFilters.hasRules() || !this.methodFilters.matches(methodName)){
-            return false;
-        }
-
-        String runtimeAnnotation = "RuntimeVisibleAnnotations";
-        List<AttributeInfo> ai = m.getMethodInfo().getAttributes().stream()
-                .filter(attributeInfo -> attributeInfo.getName().equals(runtimeAnnotation)).collect(Collectors.toList());
-
-        for(AttributeInfo attribute:ai){
-            if(!this.annotationFilters.matches(attribute.toString())){
-                return false;
-            }
-        }
-
-        return true;
-    }
+//    public boolean isTest(CtMethod m) {
+//        String methodName = m.getName();
+//
+//        if (m.getMethodInfo().isConstructor()) {
+//            return false;
+//        }
+//
+//        if (this.methodFilters.hasRules() || !this.methodFilters.matches(methodName)) {
+//            return false;
+//        }
+//
+//        String runtimeAnnotation = "RuntimeVisibleAnnotations";
+//        List<AttributeInfo> ai = m.getMethodInfo().getAttributes().stream()
+//                .filter(attributeInfo -> attributeInfo.getName().equals(runtimeAnnotation)).collect(Collectors.toList());
+//
+//        for (AttributeInfo attribute : ai) {
+//            if (!this.annotationFilters.matches(attribute.toString())) {
+//                return false;
+//            }
+//        }
+//
+//        return true;
+//    }
 
     public String getName() {
         return this.ctClass.getName();

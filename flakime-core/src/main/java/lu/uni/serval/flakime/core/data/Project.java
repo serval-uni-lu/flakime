@@ -87,7 +87,7 @@ public class Project implements Iterable<TestClass> {
      * @throws NotFoundException if passed {@code classPool} is {@code null} or if passed
      *          {@code inputDir} is a JAR or ZIP and not found
      */
-    private ClassPool configureClassPool(final ClassPool classPool, final File classDirectory, List<String> dependencies) throws NotFoundException {
+    public static ClassPool configureClassPool(final ClassPool classPool, final File classDirectory, List<String> dependencies) throws NotFoundException {
         classPool.childFirstLookup = true;
 
         classPool.appendClassPath(classDirectory.getAbsolutePath());
@@ -156,5 +156,17 @@ public class Project implements Iterable<TestClass> {
 
     public List<TestClass> getTestClasses() {
         return testClasses;
+    }
+
+    public File getClassDirectory() {
+        return classDirectory;
+    }
+
+    public File getSourceDirectory() {
+        return sourceDirectory;
+    }
+
+    public ClassPool getClassPool() {
+        return classPool;
     }
 }
