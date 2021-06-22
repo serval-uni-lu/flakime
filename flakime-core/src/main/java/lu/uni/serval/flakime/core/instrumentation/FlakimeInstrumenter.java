@@ -63,7 +63,7 @@ public class FlakimeInstrumenter {
      * @param lineNumber The line number corresponding to the execution statement
      * @return The effective source code string to be injected.
      */
-    private static String computePayload(TestMethod testMethod, Model model, int lineNumber, File outputDir, double flakeRate, boolean disableReport) {
+    public static String computePayload(TestMethod testMethod, Model model, int lineNumber, File outputDir, double flakeRate, boolean disableReport) {
         final StringBuilder result = new StringBuilder();
         double probability = model.getTestFlakinessProbability(testMethod, lineNumber,flakeRate);
         String path = outputDir.getAbsolutePath().replace("\\","\\\\");
