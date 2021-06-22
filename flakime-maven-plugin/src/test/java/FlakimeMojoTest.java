@@ -42,10 +42,7 @@ public class FlakimeMojoTest extends AbstractMojoTestCase {
      */
     public void testMojoGoal() throws Exception
     {
-
-
         FlakimeMojo mojo = (FlakimeMojo) lookupMojo( "flakime-injector", testPom );
-
         Assertions.assertNotNull( mojo );
     }
 

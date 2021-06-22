@@ -67,7 +67,7 @@ public class SimpleJavaStub
     private void install_project() throws MavenInvocationException {
         InvocationRequest request = new DefaultInvocationRequest();
         request.setPomFile(new File( getBasedir(), "pom.xml" ));
-        request.setGoals(Arrays.asList("clean","install"));
+        request.setGoals(Arrays.asList("clean","test-compile"));
         Invoker invoker = new DefaultInvoker();
 
         InvocationResult result = invoker.execute(request);
