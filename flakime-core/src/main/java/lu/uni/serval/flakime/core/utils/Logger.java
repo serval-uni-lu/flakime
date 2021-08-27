@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.utils;
+package anonymised.flakime.core.utils;
 
 public interface Logger {
     void info(String message);

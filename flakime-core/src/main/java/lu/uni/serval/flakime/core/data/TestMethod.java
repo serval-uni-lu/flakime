@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.data;
+package anonymised.flakime.core.data;
 
 import java.io.File;
 import java.util.Arrays;
@@ -17,7 +17,7 @@ import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.analysis.ControlFlow;
 import javassist.compiler.CompileError;
 import javassist.compiler.Javac;
-import lu.uni.serval.flakime.core.utils.Logger;
+import anonymised.flakime.core.utils.Logger;
 
 /**
  * This class represent a Test method holding all information about the targeted

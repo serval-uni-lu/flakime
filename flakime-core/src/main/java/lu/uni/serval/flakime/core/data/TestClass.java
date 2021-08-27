@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.data;
+package anonymised.flakime.core.data;
 
 import java.util.List;
 
@@ -6,9 +6,9 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.bytecode.AttributeInfo;
-import lu.uni.serval.flakime.core.utils.Logger;
-import lu.uni.serval.flakime.core.utils.NameFilter;
-import lu.uni.serval.flakime.core.utils.Utils;
+import anonymised.flakime.core.utils.Logger;
+import anonymised.flakime.core.utils.NameFilter;
+import anonymised.flakime.core.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,13 +1,13 @@
-package lu.uni.serval.flakime.core.flakime.maven;
+package anonymised.flakime.core.flakime.maven;
 
 import javassist.NotFoundException;
-import lu.uni.serval.flakime.core.data.Project;
-import lu.uni.serval.flakime.core.data.TestClass;
-import lu.uni.serval.flakime.core.data.TestMethod;
-import lu.uni.serval.flakime.core.flakime.maven.utils.MavenLogger;
-import lu.uni.serval.flakime.core.instrumentation.FlakimeInstrumenter;
-import lu.uni.serval.flakime.core.instrumentation.models.Model;
-import lu.uni.serval.flakime.core.instrumentation.models.ModelFactory;
+import anonymised.flakime.core.data.Project;
+import anonymised.flakime.core.data.TestClass;
+import anonymised.flakime.core.data.TestMethod;
+import anonymised.flakime.core.flakime.maven.utils.MavenLogger;
+import anonymised.flakime.core.instrumentation.FlakimeInstrumenter;
+import anonymised.flakime.core.instrumentation.models.Model;
+import anonymised.flakime.core.instrumentation.models.ModelFactory;
 
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;

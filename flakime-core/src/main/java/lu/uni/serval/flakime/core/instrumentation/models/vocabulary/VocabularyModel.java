@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.instrumentation.models.vocabulary;
+package anonymised.flakime.core.instrumentation.models.vocabulary;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,23 +15,23 @@ import java.util.stream.Collectors;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.analysis.ControlFlow;
-import lu.uni.serval.flakime.core.data.Project;
-import lu.uni.serval.flakime.core.data.TestClass;
-import lu.uni.serval.flakime.core.data.TestMethod;
-import lu.uni.serval.flakime.core.utils.Logger;
+import anonymised.flakime.core.data.Project;
+import anonymised.flakime.core.data.TestClass;
+import anonymised.flakime.core.data.TestMethod;
+import anonymised.flakime.core.utils.Logger;
 
 public class VocabularyModel
-        implements lu.uni.serval.flakime.core.instrumentation.models.Model {
+        implements anonymised.flakime.core.instrumentation.models.Model {
     private final Logger logger;
     private int nTrees;
     private int nThreads;
-    private lu.uni.serval.flakime.core.instrumentation.models.vocabulary.Model model;
+    private anonymised.flakime.core.instrumentation.models.vocabulary.Model model;
     private String pathToModel;
     private boolean trainModel;
     private Map<Integer, Double> probabilitiesPerStatement;
     private Map<String,Double> probabilityPerTestMethod;
     private Map<String,Map<Integer,Double>> probabilitiesPerTestMethod;
-    private static final lu.uni.serval.flakime.core.instrumentation.models.vocabulary.Model.Implementation MODEL_IMPLEMENTATION = lu.uni.serval.flakime.core.instrumentation.models.vocabulary.Model.Implementation.WEKA;
+    private static final anonymised.flakime.core.instrumentation.models.vocabulary.Model.Implementation MODEL_IMPLEMENTATION = anonymised.flakime.core.instrumentation.models.vocabulary.Model.Implementation.WEKA;
     private double maxProba = 0;
     public VocabularyModel(Logger logger) {
         this.logger = logger;

@@ -1,6 +1,6 @@
-package lu.uni.serval.flakime.core.flakime.maven.utils;
+package anonymised.flakime.core.flakime.maven.utils;
 
-import lu.uni.serval.flakime.core.utils.Logger;
+import anonymised.flakime.core.utils.Logger;
 import org.apache.maven.plugin.logging.Log;
 
 public class MavenLogger implements Logger {

@@ -1,7 +1,7 @@
-package lu.uni.serval.flakime.core.instrumentation.models;
+package anonymised.flakime.core.instrumentation.models;
 
-import lu.uni.serval.flakime.core.data.Project;
-import lu.uni.serval.flakime.core.data.TestMethod;
+import anonymised.flakime.core.data.Project;
+import anonymised.flakime.core.data.TestMethod;
 
 /**
  * The strategy interface allows the user to implement different flakiness probability calculation process.

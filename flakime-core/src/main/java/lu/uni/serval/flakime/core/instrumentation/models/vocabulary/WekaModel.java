@@ -1,6 +1,6 @@
-package lu.uni.serval.flakime.core.instrumentation.models.vocabulary;
+package anonymised.flakime.core.instrumentation.models.vocabulary;
 
-import lu.uni.serval.flakime.core.utils.Logger;
+import anonymised.flakime.core.utils.Logger;
 import org.apache.commons.lang3.ArrayUtils;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.KerasTokenizer;
 import org.deeplearning4j.nn.modelimport.keras.preprocessing.text.TokenizerMode;

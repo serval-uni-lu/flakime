@@ -47,7 +47,7 @@
             </plugin>
 
 <!--            <plugin>-->
-<!--                <groupId>lu.uni.serval</groupId>-->
+<!--                <groupId>anonymised</groupId>-->
 <!--                <artifactId>flakime-maven-plugin</artifactId>-->
 <!--                <version>0.1.0-SNAPSHOT</version>-->
 <!--                <executions>-->

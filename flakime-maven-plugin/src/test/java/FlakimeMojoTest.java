@@ -1,6 +1,6 @@
 import java.io.File;
 
-import lu.uni.serval.flakime.core.flakime.maven.FlakimeMojo;
+import anonymised.flakime.core.flakime.maven.FlakimeMojo;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

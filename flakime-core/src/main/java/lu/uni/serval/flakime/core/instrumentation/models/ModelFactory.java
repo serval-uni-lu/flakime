@@ -1,8 +1,8 @@
-package lu.uni.serval.flakime.core.instrumentation.models;
+package anonymised.flakime.core.instrumentation.models;
 
-import lu.uni.serval.flakime.core.instrumentation.models.uniform.UniformDistrubtionModel;
-import lu.uni.serval.flakime.core.instrumentation.models.vocabulary.VocabularyModel;
-import lu.uni.serval.flakime.core.utils.Logger;
+import anonymised.flakime.core.instrumentation.models.uniform.UniformDistrubtionModel;
+import anonymised.flakime.core.instrumentation.models.vocabulary.VocabularyModel;
+import anonymised.flakime.core.utils.Logger;
 
 import java.io.FileNotFoundException;
 import java.util.Properties;

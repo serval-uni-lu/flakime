@@ -7,8 +7,8 @@ import java.util.stream.Stream;
 
 import javassist.CtMethod;
 import javassist.NotFoundException;
-import lu.uni.serval.flakime.core.data.Project;
-import lu.uni.serval.flakime.core.utils.NameFilter;
+import anonymised.flakime.core.data.Project;
+import anonymised.flakime.core.utils.NameFilter;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +36,7 @@ class ProjectLoadingTest {
         CtMethod mainMethod = p.getClassPool().get("org.example.MathUtilsTest").getDeclaredMethod("main");
         Set<String> annotationSet = Stream.of("^@org\\.junit\\.jupiter\\.api\\.Test*.","@org\\.junit\\.Test").collect(
                 Collectors.toSet());
-        assertFalse(lu.uni.serval.flakime.core.utils.Utils.isTest(mainMethod,new NameFilter(Collections.emptySet()),new NameFilter(annotationSet)));
+        assertFalse(anonymised.flakime.core.utils.Utils.isTest(mainMethod,new NameFilter(Collections.emptySet()),new NameFilter(annotationSet)));
     }
 
     @Test
@@ -45,7 +45,7 @@ class ProjectLoadingTest {
         CtMethod mainMethod = p.getClassPool().get("org.example.MathUtilsTest").getDeclaredMethod("testIf");
         Set<String> annotationSet = Stream.of("^@org\\.junit\\.jupiter\\.api\\.Test*.","@org\\.junit\\.Test").collect(
                 Collectors.toSet());
-        assertTrue(lu.uni.serval.flakime.core.utils.Utils.isTest(mainMethod,new NameFilter(Collections.emptySet()),new NameFilter(annotationSet)));
+        assertTrue(anonymised.flakime.core.utils.Utils.isTest(mainMethod,new NameFilter(Collections.emptySet()),new NameFilter(annotationSet)));
     }
 
     @Test
@@ -56,8 +56,8 @@ class ProjectLoadingTest {
         Set<String> annotationSet = Stream.of("^@org\\.junit\\.jupiter\\.api\\.Test*.","@org\\.junit\\.Test").collect(
                 Collectors.toSet());
         Set<String> methodNameSet = Stream.of("^.*main").collect(Collectors.toSet());
-        assertTrue(lu.uni.serval.flakime.core.utils.Utils.isTest(mainMethod,new NameFilter(methodNameSet),new NameFilter(annotationSet)));
-        assertTrue(lu.uni.serval.flakime.core.utils.Utils.isTest(testMethod,new NameFilter(methodNameSet),new NameFilter(annotationSet)));
+        assertTrue(anonymised.flakime.core.utils.Utils.isTest(mainMethod,new NameFilter(methodNameSet),new NameFilter(annotationSet)));
+        assertTrue(anonymised.flakime.core.utils.Utils.isTest(testMethod,new NameFilter(methodNameSet),new NameFilter(annotationSet)));
 
     }
 

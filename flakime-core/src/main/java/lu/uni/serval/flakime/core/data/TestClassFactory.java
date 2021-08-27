@@ -1,10 +1,10 @@
-package lu.uni.serval.flakime.core.data;
+package anonymised.flakime.core.data;
 
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import lu.uni.serval.flakime.core.utils.Logger;
-import lu.uni.serval.flakime.core.utils.NameFilter;
+import anonymised.flakime.core.utils.Logger;
+import anonymised.flakime.core.utils.NameFilter;
 
 import java.io.File;
 import java.util.Set;

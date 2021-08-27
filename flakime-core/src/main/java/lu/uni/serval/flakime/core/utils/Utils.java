@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.utils;
+package anonymised.flakime.core.utils;
 
 import javassist.CtMethod;
 import javassist.bytecode.AttributeInfo;

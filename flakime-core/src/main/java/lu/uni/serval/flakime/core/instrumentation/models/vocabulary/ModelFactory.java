@@ -1,6 +1,6 @@
-package lu.uni.serval.flakime.core.instrumentation.models.vocabulary;
+package anonymised.flakime.core.instrumentation.models.vocabulary;
 
-import lu.uni.serval.flakime.core.utils.Logger;
+import anonymised.flakime.core.utils.Logger;
 
 public class ModelFactory {
 

@@ -12,13 +12,13 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javassist.NotFoundException;
-import lu.uni.serval.flakime.core.data.Project;
-import lu.uni.serval.flakime.core.utils.Logger;
+import anonymised.flakime.core.data.Project;
+import anonymised.flakime.core.utils.Logger;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 
 public class Utils {
-    static Logger logger = new lu.uni.serval.flakime.core.utils.Logger() {
+    static Logger logger = new anonymised.flakime.core.utils.Logger() {
         @Override
         public void info(String message) {
             System.out.printf("[%s][%s]%n",this.getClass().getName(),message);

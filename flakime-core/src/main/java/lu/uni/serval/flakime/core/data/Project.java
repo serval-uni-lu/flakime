@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.data;
+package anonymised.flakime.core.data;
 
 import javassist.*;
 
@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import lu.uni.serval.flakime.core.utils.*;
-import lu.uni.serval.flakime.core.utils.NameFilter;
+import anonymised.flakime.core.utils.*;
+import anonymised.flakime.core.utils.NameFilter;
 import org.apache.commons.io.FileUtils;
 
 import static org.apache.commons.io.FilenameUtils.removeExtension;

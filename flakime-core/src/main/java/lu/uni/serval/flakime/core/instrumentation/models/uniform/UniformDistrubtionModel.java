@@ -1,10 +1,10 @@
-package lu.uni.serval.flakime.core.instrumentation.models.uniform;
+package anonymised.flakime.core.instrumentation.models.uniform;
 
 import java.util.Collections;
-import lu.uni.serval.flakime.core.data.Project;
-import lu.uni.serval.flakime.core.data.TestMethod;
-import lu.uni.serval.flakime.core.instrumentation.models.Model;
-import lu.uni.serval.flakime.core.utils.Logger;
+import anonymised.flakime.core.data.Project;
+import anonymised.flakime.core.data.TestMethod;
+import anonymised.flakime.core.instrumentation.models.Model;
+import anonymised.flakime.core.utils.Logger;
 
 /**
  * Strategy implementation that follows normal distribution.

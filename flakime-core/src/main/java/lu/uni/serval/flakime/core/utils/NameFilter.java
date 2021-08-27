@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.utils;
+package anonymised.flakime.core.utils;
 
 import java.util.HashMap;
 import java.util.Map;

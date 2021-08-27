@@ -1,9 +1,9 @@
-package lu.uni.serval.flakime.core.data;
+package anonymised.flakime.core.data;
 
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.bytecode.BadBytecode;
-import lu.uni.serval.flakime.core.utils.Logger;
+import anonymised.flakime.core.utils.Logger;
 
 import java.io.File;
 

@@ -7,26 +7,17 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sonar.projectKey>flakime</sonar.projectKey>
         <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
-        <sonar.organization>deploy-serval-snt</sonar.organization>
+        <sonar.organization>anonymised</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
-    <groupId>lu.uni.serval</groupId>
+    <groupId>anonymised</groupId>
     <artifactId>flakime</artifactId>
     <version>0.1.4-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
-    <scm>
-        <connection>scm:git:git@github.com:UL-SnT-Serval/flakime.git</connection>
-        <!-- <developerConnection>scm:git:git@github.com:UL-SnT-Serval/UL-SnT-Serval.git</developerConnection> -->
-        <!-- <developerConnection>scm:git:git@github.com:kabinja/kabinja.git</developerConnection> -->
-        <url>https://github.com/UL-SnT-Serval/flakime</url>
-        <tag>HEAD</tag>
-    </scm>
-
     <name>Flakime</name>
-    <url>https://github.com/UL-SnT-Serval/flakime</url>
 
     <description>
         This project allows simulating flakiness by injecting exception during test sources compilation at computed locations
@@ -43,15 +34,11 @@
 
     <developers>
         <developer>
-            <id>franadr</id>
-            <name>Adriano Franci</name>
-            <email>adriano@franci.lu</email>
+            <id>anonymised</id>
+            <name>anonymised</name>
+            <email>anonymised</email>
         </developer>
-        <developer>
-            <id>kabinja</id>
-            <name>Renaud Rwemalika</name>
-            <email>renaudrwemalika@gmail.com</email>
-        </developer>
+
     </developers>
 
     <modules>

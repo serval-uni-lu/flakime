@@ -1,4 +1,4 @@
-package lu.uni.serval.flakime.core.instrumentation.models.vocabulary;
+package anonymised.flakime.core.instrumentation.models.vocabulary;
 
 import java.util.Set;
 
