@@ -90,7 +90,7 @@ each statement with its computed \emph{flakiness probability}.
 Following the vocabulary-based prediction model, tests that execute similar pieces of code have a dependent likelihood to be flaky.
 Overall, including this approach in FlakiMe allows drawing on real-world flakiness distribution data.
 
-##References
+## References
 
  - **pinto2020** : Pinto, Gustavo and Miranda, Breno and Dissanayake, Supun and D'Amorim, Marcelo and Treude, Christoph and Bertolino, Antonia
 "What is the Vocabulary of Flaky Tests?" in Proceedings of the 17th International Conference on Mining Software Repositories
