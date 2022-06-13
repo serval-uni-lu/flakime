@@ -91,6 +91,7 @@ Following the vocabulary-based prediction model, tests that execute similar piec
 Overall, including this approach in FlakiMe allows drawing on real-world flakiness distribution data.
 
 ##References
+
  - **pinto2020** : Pinto, Gustavo and Miranda, Breno and Dissanayake, Supun and D'Amorim, Marcelo and Treude, Christoph and Bertolino, Antonia
 "What is the Vocabulary of Flaky Tests?" in Proceedings of the 17th International Conference on Mining Software Repositories
  - **Haben2021** : Haben, Guillaume and Habchi, Sarra and Papadakis, Mike and Cordy, Maxime and Le Traon, Yves 
