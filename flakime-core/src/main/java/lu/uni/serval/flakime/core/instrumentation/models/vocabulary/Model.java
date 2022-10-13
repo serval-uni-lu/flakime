@@ -8,8 +8,9 @@ public interface Model {
         WEKA
     }
 
-    void setData(TrainingData trainingData, Set<String> additionalTrainingText);
+    void setData(Data data, Set<String> additionalTrainingText);
     void train() throws Exception;
     double computeProbability(String body) throws Exception;
+    double computeClass(String body) throws Exception;
     void save(String path) throws Exception;
 }

@@ -15,15 +15,10 @@
     <name>FlakiMe Maven Plugin</name>
     <url>https://github.com/UL-SnT-Serval/flakime</url>
 
-    <prerequisites>
-        <maven>3.6.0</maven>
-    </prerequisites>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.version>3.6.0</maven.version>
     </properties>
 
     <build>
@@ -31,7 +26,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.4</version>
                 <configuration>
                      <goalPrefix>flakime</goalPrefix>
                     <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -45,7 +40,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.4.0</version>
                 <configuration>
                     <source>8</source>
                     <detectJavaApiLink>false</detectJavaApiLink>
@@ -70,7 +65,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-invoker-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.3.0</version>
                         <configuration>
                             <debug>true</debug>
                             <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
@@ -105,34 +100,34 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>${maven.version}</version>
+            <version>3.8.6</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
-            <version>${maven.version}</version>
+            <version>3.8.6</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-artifact</artifactId>
-            <version>${maven.version}</version>
+            <version>3.8.6</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-compat</artifactId>
-            <version>${maven.version}</version>
+            <version>3.8.6</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
-            <version>3.6.0</version>
+            <version>3.6.4</version>
             <scope>provided</scope>
         </dependency>
 
@@ -145,7 +140,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.7.0-M1</version>
+            <version>5.9.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

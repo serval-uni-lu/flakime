@@ -48,28 +48,26 @@ public class VocabularyModel
     public void preProcess(final Project project,double flakeRate) throws Exception {
         probabilitiesPerTestMethod = new HashMap<>();
         probabilityPerTestMethod = new HashMap<>();
-        probabilityPerTestMethod = new HashMap<>();
         final InputStream dataSource = VocabularyModel.class.getClassLoader()
                 .getResourceAsStream("data/vocabulary.json");
-        final TrainingData trainingData = new TrainingData(dataSource);
+        final Data data = new Data(dataSource);
         final Set<String> additionalTrainingText = new HashSet<>();
 
         for (TestClass testClass : project) {
             for (TestMethod testMethod : testClass) {
                 final File f = testMethod.getSourceCodeFile();
                 additionalTrainingText.addAll(this.getTestMethodBodyText(f, testMethod).values());
-
             }
         }
 
         if (trainModel || !new File(pathToModel).exists()) {
             this.model = ModelFactory.create(MODEL_IMPLEMENTATION, this.logger, this.nTrees, this.nThreads);
-            this.model.setData(trainingData, additionalTrainingText);
+            this.model.setData(data, additionalTrainingText);
             this.model.train();
             this.model.save(this.pathToModel);
         } else {
             this.model = ModelFactory.load(MODEL_IMPLEMENTATION, this.logger, this.pathToModel);
-            this.model.setData(trainingData, additionalTrainingText);
+            this.model.setData(data, additionalTrainingText);
         }
 
         for (TestClass tc: project){

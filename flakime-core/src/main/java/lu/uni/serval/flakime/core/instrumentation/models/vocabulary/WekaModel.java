@@ -52,13 +52,13 @@ public class WekaModel implements Model{
     }
 
     @Override
-    public void setData(TrainingData trainingData, Set<String> additionalTrainingText){
-        final Integer[] yTrain = trainingData.getEntries().stream()
-                .map(TrainingData.Entry::getLabel)
+    public void setData(Data data, Set<String> additionalTrainingText){
+        final Integer[] yTrain = data.stream()
+                .map(Data.Entry::getLabel)
                 .toArray(Integer[]::new);
 
-        final String[] dataTrain = trainingData.getEntries().stream()
-                .map(TrainingData.Entry::getBody)
+        final String[] dataTrain = data.stream()
+                .map(Data.Entry::getBody)
                 .toArray(String[]::new);
 
         final String[] additionalTrain = additionalTrainingText.toArray(new String[0]);
@@ -105,6 +105,16 @@ public class WekaModel implements Model{
         double[] dist = this.randomForest.distributionForInstance(instance);
 
         return dist[1];
+    }
+
+    @Override
+    public double computeClass(String body) throws Exception {
+        if (this.trainNeededFlag) {
+            throw new IllegalStateException("The model is not fitted");
+        }
+
+        final Instance instance = this.createSingleInstance(this.trainingInstances, body, 0, this.tokenizer);
+        return this.randomForest.classifyInstance(instance);
     }
 
     /**
